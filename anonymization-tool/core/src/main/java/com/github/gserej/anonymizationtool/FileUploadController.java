@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBui
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,6 +57,14 @@ public class FileUploadController {
         storageService.store(file);
         redirectAttributes.addFlashAttribute("message",
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
+
+        File file2 = storageService.loadAsFile(file.getOriginalFilename());
+
+        try {
+            PrintDrawLocations.PrintDrawLocation(file2);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         return "redirect:/";
     }

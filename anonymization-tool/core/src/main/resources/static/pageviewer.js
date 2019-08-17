@@ -42,7 +42,6 @@ var loadingTask = pdfjsLib.getDocument({
     cMapPacked: CMAP_PACKED
 });
 
-// Loading document.
 function render() {
     $(".page").remove();
 

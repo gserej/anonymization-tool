@@ -16,11 +16,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<html xmlns:th="https://www.thymeleaf.org" dir="ltr" mozdisallowselectionprint>
+<html dir="ltr" mozdisallowselectionprint xmlns:th="https://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <meta name="google" content="notranslate">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
+    <meta content="notranslate" name="google">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <title>PDF.js page viewer using built components</title>
 
@@ -34,7 +34,7 @@ limitations under the License.
 
     </style>
 
-    <link rel="stylesheet" href="pdfjs-dist/web/pdf_viewer.css">
+    <link href="pdfjs-dist/web/pdf_viewer.css" rel="stylesheet">
     <script src="pdfjs-dist/build/pdf.js"></script>
     <script src="pdfjs-dist/web/pdf_viewer.js"></script>
 
@@ -55,11 +55,11 @@ limitations under the License.
 </div>
 
 <div>
-    <form method="POST" enctype="multipart/form-data" action="/">
+    <form action="/" enctype="multipart/form-data" method="POST">
         <table>
             <tr>
                 <td>File to upload:</td>
-                <td><input type="file" name="file" accept="application/pdf"/></td>
+                <td><input accept="application/pdf" name="file" type="file"/></td>
             </tr>
             <tr>
                 <td></td>
@@ -81,7 +81,7 @@ limitations under the License.
 
 </div>
 
-<div id="pageContainer" class="pdfViewer singlePageView"></div>
+<div class="pdfViewer singlePageView" id="pageContainer"></div>
 
 <script th:inline="javascript">
     var DEFAULT_URL = /*[[${files}]]*/ '../static/compressed.tracemonkey-pldi-09.pdf';

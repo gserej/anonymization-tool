@@ -5,70 +5,79 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 @JsonAutoDetect
 public class Rectangle {
 
-    private String id;
-    private String marked;
-    private String x;
-    private String y;
-    private String w;
-    private String h;
+    private int id;
+    private boolean marked;
+    private float x;
+    private float y;
+    private float w;
+    private float h;
 
-    public String getId() {
+    public Rectangle(boolean marked, float x, float y, float w, float h) {
+        this.marked = marked;
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+    }
+
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public String getMarked() {
+    public boolean isMarked() {
         return marked;
     }
 
-    public void setMarked(String marked) {
+    public void setMarked(boolean marked) {
         this.marked = marked;
     }
 
-    public String getX() {
+    public float getX() {
         return x;
     }
 
-    public void setX(String x) {
+    public void setX(float x) {
         this.x = x;
     }
 
-    public String getY() {
+    public float getY() {
         return y;
     }
 
-    public void setY(String y) {
+    public void setY(float y) {
         this.y = y;
     }
 
-    public String getW() {
+    public float getW() {
         return w;
     }
 
-    public void setW(String w) {
+    public void setW(float w) {
         this.w = w;
     }
 
-    public String getH() {
+    public float getH() {
         return h;
     }
 
-    public void setH(String h) {
+    public void setH(float h) {
         this.h = h;
     }
+
 
     @Override
     public String toString() {
         return "Rectangle{" +
-                "id='" + id + '\'' +
-                ", marked='" + marked + '\'' +
-                ", x='" + x + '\'' +
-                ", y='" + y + '\'' +
-                ", w='" + w + '\'' +
-                ", h='" + h + '\'' +
+                "id=" + id +
+                ", marked=" + marked +
+                ", x=" + x +
+                ", y=" + y +
+                ", w=" + w +
+                ", h=" + h +
                 '}';
     }
 }

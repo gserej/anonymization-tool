@@ -8,6 +8,7 @@ import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -64,6 +65,12 @@ public class FileSystemStorageService implements StorageService {
     @Override
     public Path load(String filename) {
         return rootLocation.resolve(filename);
+    }
+
+
+    public File loadAsFile(String filename) {
+        Path file = rootLocation.resolve(filename);
+        return file.toFile();
     }
 
     @Override
