@@ -30,5 +30,10 @@ build/
 ### VS Code ###
 .vscode/
 
+
 /test-marked-1.png
 /upload-dir/
+
+*
+*/
+!.gitignore
