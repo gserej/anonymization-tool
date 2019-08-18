@@ -32,6 +32,7 @@ var CMAP_PACKED = true;
 
 var PAGE_TO_VIEW = 1;
 var SCALE = 1.0;
+var SCALE_FIXED = SCALE / 0.75;
 var number_pages;
 
 var container = document.getElementById('pageContainer');
@@ -103,7 +104,7 @@ function drawRedRec(x, y, w, h, rectNum) {
     var ctx = c.get(0).getContext("2d");
     ctx.strokeStyle = 'rgba(255,0,0,1)';
     ctx.beginPath();
-    ctx.rect(x, y, w, h);
+    ctx.rect(SCALE_FIXED * x, SCALE_FIXED * y, SCALE_FIXED * w, SCALE_FIXED * h);
     ctx.stroke();
 }
 
@@ -114,7 +115,7 @@ function drawBlackRec(x, y, w, h, rectNum) {
     var ctx = c.get(0).getContext("2d");
     ctx.strokeStyle = 'rgba(0,0,0,1)';
     ctx.beginPath();
-    ctx.rect(x, y, w, h);
+    ctx.rect(SCALE_FIXED * x, SCALE_FIXED * y, SCALE_FIXED * w, SCALE_FIXED * h);
     ctx.fillStyle = "black";
     ctx.fill();
 }
@@ -135,7 +136,6 @@ for (var o in rectListJS) {
 }
 
 $("#draw").on('click', function () {
-
 
     var c_page = $("canvas[id^=page]");
     var rectNum = -1;
@@ -160,8 +160,8 @@ $("#draw").on('click', function () {
         var isCollision = false;
         rectNum = -1;
         for (var i = 0, len = rects.length; i < len; i++) {
-            var left = rects[i].x, right = rects[i].x + rects[i].w;
-            var top = rects[i].y, bottom = rects[i].y + rects[i].h;
+            var left = rects[i].x * SCALE_FIXED, right = rects[i].x * SCALE_FIXED + rects[i].w * SCALE_FIXED;
+            var top = rects[i].y * SCALE_FIXED, bottom = rects[i].y * SCALE_FIXED + rects[i].h * SCALE_FIXED;
             if (right >= x
                 && left <= x
                 && bottom >= y
