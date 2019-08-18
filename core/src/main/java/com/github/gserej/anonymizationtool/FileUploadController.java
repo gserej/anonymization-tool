@@ -40,6 +40,7 @@ public class FileUploadController {
         return "pageviewer";
     }
 
+
     @GetMapping("/files/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
@@ -52,16 +53,20 @@ public class FileUploadController {
 
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
-                                   RedirectAttributes redirectAttributes) {
+                                   RedirectAttributes redirectAttributes,
+                                   Model model) {
 
         storageService.store(file);
         redirectAttributes.addFlashAttribute("message",
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
 
-        File file2 = storageService.loadAsFile(file.getOriginalFilename());
-
+        File fileToProcess = storageService.loadAsFile(file.getOriginalFilename());
         try {
-            PrintDrawLocations.PrintDrawLocation(file2);
+            PrintDrawLocations.PrintDrawLocation(fileToProcess);
+            redirectAttributes.addFlashAttribute("rectList",
+                    PrintDrawLocations.getRectangleList());
+//            model.addAttribute("rectList", PrintDrawLocations.getRectangleList());
+
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -41,7 +41,7 @@ public class PrintDrawLocations extends PDFTextStripper {
     private AffineTransform rotateAT;
     private AffineTransform transAT;
     private final String filename;
-    static final int SCALE = 4;
+    private static final int SCALE = 5;
     private Graphics2D g2d;
     private final PDDocument document;
 
@@ -50,9 +50,15 @@ public class PrintDrawLocations extends PDFTextStripper {
         this.filename = filename;
     }
 
-    public static void PrintDrawLocation(File file) throws IOException {
 
-        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    static List<Rectangle> rectangleList = new ArrayList<>();
+
+
+    static List<Rectangle> getRectangleList() {
+        return rectangleList;
+    }
+
+    public static void PrintDrawLocation(File file) throws IOException {
 
         try (
                 PDDocument document = PDDocument.load(file)
@@ -62,6 +68,7 @@ public class PrintDrawLocations extends PDFTextStripper {
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
                 stripper.stripPage(page);
             }
+
         } catch (NullPointerException e) {
             e.printStackTrace();
         }
@@ -148,7 +155,6 @@ public class PrintDrawLocations extends PDFTextStripper {
         }
     }
 
-
     private void printWord(List<TextPosition> word) throws IOException {
         StringBuilder builder = new StringBuilder();
         float rectWidth = 0.0f;
@@ -164,6 +170,9 @@ public class PrintDrawLocations extends PDFTextStripper {
             rectWidth += letter.getWidthDirAdj();
             xadvance += font.getWidth(letter.getCharacterCodes()[0]);
         }
+
+//        System.out.println(builder.toString());
+
         // red
         AffineTransform at = text.getTextMatrix().createAffineTransform();
         Rectangle2D.Float rect = new Rectangle2D.Float(0, 0,
@@ -174,8 +183,6 @@ public class PrintDrawLocations extends PDFTextStripper {
         s = rotateAT.createTransformedShape(s);
         g2d.setColor(Color.red);
 //        g2d.draw(s);
-        System.out.println(builder.toString());
-
 
         // in blue:
         rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f, xadvance, bbox.getHeight() * 0.85f);
@@ -197,8 +204,7 @@ public class PrintDrawLocations extends PDFTextStripper {
                 (float) s.getBounds2D().getWidth(),
                 (float) s.getBounds2D().getHeight());
 
+        rectangleList.add(rectangle);
         g2d.draw(s);
-
     }
-
 }

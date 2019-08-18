@@ -123,11 +123,20 @@ function removeRec(rectNum) {
     $("#pageContainer > div > div.canvasWrapper > canvas[id=rect" + rectNum + "]:first").remove();
 }
 
-var rects = [{id: 0, marked: false, x: 10, y: 10, w: 50, h: 20},
-    {id: 1, marked: false, x: 75, y: 75, w: 50, h: 20},
-    {id: 2, marked: false, x: 150, y: 150, w: 40, h: 20}
-];
+// var rects = [{id: 0, marked: false, x: 10, y: 10, w: 50, h: 20},
+//     {id: 1, marked: false, x: 75, y: 75, w: 50, h: 20},
+//     {id: 2, marked: false, x: 150, y: 150, w: 40, h: 20},
+//     {id: 3, marked: false, x: 700, y: 700, w: 50, h: 50}
+// ];
+
+var rects = [];
+for (var o in rectListJS) {
+    rects.push(rectListJS[o]);
+}
+
 $("#draw").on('click', function () {
+
+
     var c_page = $("canvas[id^=page]");
     var rectNum = -1;
 

@@ -2,9 +2,12 @@ package com.github.gserej.anonymizationtool;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 @JsonAutoDetect
 public class Rectangle {
 
+    private static final AtomicInteger count = new AtomicInteger(-1);
     private int id;
     private boolean marked;
     private float x;
@@ -13,6 +16,7 @@ public class Rectangle {
     private float h;
 
     public Rectangle(boolean marked, float x, float y, float w, float h) {
+        this.id = count.incrementAndGet();
         this.marked = marked;
         this.x = x;
         this.y = y;
