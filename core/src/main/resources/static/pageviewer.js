@@ -56,7 +56,7 @@ function render() {
                 id: PAGE_TO_VIEW,
                 scale: SCALE,
                 defaultViewport: pdfPage.getViewport({scale: SCALE}),
-                textLayerFactory: new pdfjsViewer.DefaultTextLayerFactory(),
+                textLayerFactory: new pdfjsViewer.DefaultTextLayerFactory()
                 // annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
             });
             pdfPageView.setPdfPage(pdfPage);
@@ -173,9 +173,10 @@ $("#draw").on('click', function () {
         return isCollision;
     }
 
+
     $('.textLayer').click(function (e) {
         $('.textLayer').hide();
-        if (collides(rects, e.clientX - BBoffsetX, e.clientY - BBoffsetY)) {
+        if (collides(rects, e.pageX - BBoffsetX, e.pageY - BBoffsetY)) {
             console.log("RecNum " + rectNum);
             if (rectNum >= 0) {
                 if (rects[rectNum].marked === false) {

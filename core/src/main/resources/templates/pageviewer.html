@@ -16,7 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<html dir="ltr" mozdisallowselectionprint xmlns:th="https://www.thymeleaf.org">
+<html dir="ltr" mozdisallowselectionprint xmlns:th="https://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
@@ -43,13 +43,13 @@ limitations under the License.
 <body tabindex="1">
 
 <div th:if="${message}">
-    <h2 th:text="${message}"/>
+    <h3 th:text="${message}"></h3>
 </div>
 
 <div>
     <ul>
         <li th:each="file : ${files}">
-            <a th:href="${file}" th:text="${file}"/>
+            <a th:href="${file}" th:text="${file}"></a>
         </li>
     </ul>
 </div>
@@ -60,11 +60,12 @@ limitations under the License.
             <tr>
                 <td>File to upload:</td>
                 <td><input accept="application/pdf" name="file" type="file"/></td>
-            </tr>
-            <tr>
-                <td></td>
                 <td><input type="submit" value="Upload"/></td>
             </tr>
+            <!--            <tr>-->
+            <!--                <td></td>-->
+            <!--                <td><input type="submit" value="Upload"/></td>-->
+            <!--            </tr>-->
         </table>
     </form>
 </div>

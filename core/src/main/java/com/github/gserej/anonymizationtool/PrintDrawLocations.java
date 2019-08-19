@@ -16,6 +16,7 @@
  */
 package com.github.gserej.anonymizationtool;
 
+import org.apache.commons.validator.GenericValidator;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -123,12 +124,12 @@ public class PrintDrawLocations extends PDFTextStripper {
 
         g2d.dispose();
 
-        String imageFilename = filename;
+        String imageFilename;
         imageFilename = "test.png";
         int pt = imageFilename.lastIndexOf('.');
         imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
 
-        ImageIO.write(image, "png", new File(imageFilename));
+        ImageIO.write(image, "png", new File("markedFiles/" + imageFilename));
     }
 
     /**
@@ -170,41 +171,50 @@ public class PrintDrawLocations extends PDFTextStripper {
             rectWidth += letter.getWidthDirAdj();
             xadvance += font.getWidth(letter.getCharacterCodes()[0]);
         }
-
+        String singleWord = builder.toString();
 //        System.out.println(builder.toString());
+        if (DataTypeValidators.isValidNIP(singleWord) ||
+                DataTypeValidators.isValidPesel(singleWord) ||
+                DataTypeValidators.isValidREGON(singleWord) ||
+                GenericValidator.isDate(singleWord, null) ||
+                singleWord.equals("PX031608")) {
 
-        // red
-        AffineTransform at = text.getTextMatrix().createAffineTransform();
-        Rectangle2D.Float rect = new Rectangle2D.Float(0, 0,
-                rectWidth / text.getTextMatrix().getScalingFactorX(),
-                text.getHeightDir() / text.getTextMatrix().getScalingFactorY());
-        Shape s = at.createTransformedShape(rect);
-        s = flipAT.createTransformedShape(s);
-        s = rotateAT.createTransformedShape(s);
-        g2d.setColor(Color.red);
-//        g2d.draw(s);
+            AffineTransform at = text.getTextMatrix().createAffineTransform();
+//             red
 
-        // in blue:
-        rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f, xadvance, bbox.getHeight() * 0.85f);
-        if (font instanceof PDType3Font) {
-            // bbox and font matrix are unscaled
-            at.concatenate(font.getFontMatrix().createAffineTransform());
-        } else {
-            // bbox and font matrix are already scaled to 1000
-            at.scale(1 / 1000f, 1 / 1000f);
+//            Rectangle2D.Float rect = new Rectangle2D.Float(0, 0,
+//                    rectWidth / text.getTextMatrix().getScalingFactorX(),
+//                    text.getHeightDir() / text.getTextMatrix().getScalingFactorY());
+//            Shape s = at.createTransformedShape(rect);
+//            s = flipAT.createTransformedShape(s);
+//            s = rotateAT.createTransformedShape(s);
+//            g2d.setColor(Color.red);
+//            g2d.draw(s);
+
+            // in blue:
+            Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f, xadvance, bbox.getHeight() * 0.85f);
+            if (font instanceof PDType3Font) {
+                // bbox and font matrix are unscaled
+                at.concatenate(font.getFontMatrix().createAffineTransform());
+            } else {
+                // bbox and font matrix are already scaled to 1000
+                at.scale(1 / 1000f, 1 / 1000f);
+            }
+            Shape s = at.createTransformedShape(rect);
+            s = flipAT.createTransformedShape(s);
+            s = rotateAT.createTransformedShape(s);
+
+            g2d.setColor(Color.blue);
+//        System.out.println(s.getBounds2D());
+            Rectangle rectangle = new Rectangle(false, (float) s.getBounds2D().getX(),
+                    (float) s.getBounds2D().getY(),
+                    (float) s.getBounds2D().getWidth(),
+                    (float) s.getBounds2D().getHeight(),
+                    1);
+
+
+            rectangleList.add(rectangle);
+            g2d.draw(s);
         }
-        s = at.createTransformedShape(rect);
-        s = flipAT.createTransformedShape(s);
-        s = rotateAT.createTransformedShape(s);
-
-        g2d.setColor(Color.blue);
-        System.out.println(s.getBounds2D());
-        Rectangle rectangle = new Rectangle(false, (float) s.getBounds2D().getX(),
-                (float) s.getBounds2D().getY(),
-                (float) s.getBounds2D().getWidth(),
-                (float) s.getBounds2D().getHeight());
-
-        rectangleList.add(rectangle);
-        g2d.draw(s);
     }
 }

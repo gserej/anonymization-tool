@@ -1,10 +1,15 @@
 package com.github.gserej.anonymizationtool;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class DataTypeValidators {
 
-    public static boolean isValidPesel(String pesel) {
+    static boolean isValidPesel(String pesel) {
         pesel = pesel.trim();
         if (pesel.length() != 11) return false;
+        if (!StringUtils.isNumeric(pesel)) {
+            return false;
+        }
 
         int[] weights = {1, 3, 7, 9, 1, 3, 7, 9, 1, 3};
 
@@ -25,9 +30,12 @@ public class DataTypeValidators {
     }
 
 
-    public static boolean isValidNIP(String nip) {
+    static boolean isValidNIP(String nip) {
         int nsize = nip.length();
         if (nsize != 10) {
+            return false;
+        }
+        if (!StringUtils.isNumeric(nip)) {
             return false;
         }
         int[] weights = {6, 5, 7, 2, 3, 4, 5, 6, 7};
@@ -44,10 +52,13 @@ public class DataTypeValidators {
     }
 
 
-    public static boolean isValidREGON(String regon) {
+    static boolean isValidREGON(String regon) {
 
         int rsize = regon.length();
         if (!((rsize == 9) || (rsize == 14))) {
+            return false;
+        }
+        if (!StringUtils.isNumeric(regon)) {
             return false;
         }
 
