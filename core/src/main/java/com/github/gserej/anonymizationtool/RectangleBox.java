@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonAutoDetect
-public class Rectangle {
+public class RectangleBox {
 
     private static final AtomicInteger count = new AtomicInteger(-1);
     private int id;
@@ -16,7 +16,7 @@ public class Rectangle {
     private float w;
     private float h;
 
-    Rectangle(boolean marked, float x, float y, float w, float h, int typeOfData) {
+    RectangleBox(boolean marked, float x, float y, float w, float h, int typeOfData) {
         this.id = count.incrementAndGet();
         this.marked = marked;
         this.x = x;
@@ -85,7 +85,7 @@ public class Rectangle {
 
     @Override
     public String toString() {
-        return "Rectangle{" +
+        return "RectangleBox{" +
                 "id=" + id +
                 ", marked=" + marked +
                 ", typeOfData=" + typeOfData +

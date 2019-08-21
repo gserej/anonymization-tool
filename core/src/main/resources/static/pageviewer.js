@@ -56,8 +56,8 @@ function render() {
                 id: PAGE_TO_VIEW,
                 scale: SCALE,
                 defaultViewport: pdfPage.getViewport({scale: SCALE}),
-                textLayerFactory: new pdfjsViewer.DefaultTextLayerFactory()
                 // annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
+                textLayerFactory: new pdfjsViewer.DefaultTextLayerFactory()
             });
             pdfPageView.setPdfPage(pdfPage);
             return pdfPageView.draw();

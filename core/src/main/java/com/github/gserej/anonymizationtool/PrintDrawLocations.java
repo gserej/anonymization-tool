@@ -37,26 +37,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PrintDrawLocations extends PDFTextStripper {
+    private static final int SCALE = 5;
+    static List<RectangleBox> rectangleBoxList = new ArrayList<>();
+    private final String filename;
+    private final PDDocument document;
     private BufferedImage image;
     private AffineTransform flipAT;
     private AffineTransform rotateAT;
     private AffineTransform transAT;
-    private final String filename;
-    private static final int SCALE = 5;
     private Graphics2D g2d;
-    private final PDDocument document;
+
 
     public PrintDrawLocations(PDDocument document, String filename) throws IOException {
         this.document = document;
         this.filename = filename;
     }
 
-
-    static List<Rectangle> rectangleList = new ArrayList<>();
-
-
-    static List<Rectangle> getRectangleList() {
-        return rectangleList;
+    static List<RectangleBox> getRectangleBoxList() {
+        return rectangleBoxList;
     }
 
     public static void PrintDrawLocation(File file) throws IOException {
@@ -158,7 +156,7 @@ public class PrintDrawLocations extends PDFTextStripper {
 
     private void printWord(List<TextPosition> word) throws IOException {
         StringBuilder builder = new StringBuilder();
-        float rectWidth = 0.0f;
+
 
         TextPosition text = word.get(0);
 
@@ -168,7 +166,6 @@ public class PrintDrawLocations extends PDFTextStripper {
 
         for (TextPosition letter : word) {
             builder.append(letter.getUnicode());
-            rectWidth += letter.getWidthDirAdj();
             xadvance += font.getWidth(letter.getCharacterCodes()[0]);
         }
         String singleWord = builder.toString();
@@ -206,14 +203,14 @@ public class PrintDrawLocations extends PDFTextStripper {
 
             g2d.setColor(Color.blue);
 //        System.out.println(s.getBounds2D());
-            Rectangle rectangle = new Rectangle(false, (float) s.getBounds2D().getX(),
+            RectangleBox rectangleBox = new RectangleBox(false, (float) s.getBounds2D().getX(),
                     (float) s.getBounds2D().getY(),
                     (float) s.getBounds2D().getWidth(),
                     (float) s.getBounds2D().getHeight(),
                     1);
 
 
-            rectangleList.add(rectangle);
+            rectangleBoxList.add(rectangleBox);
             g2d.draw(s);
         }
     }

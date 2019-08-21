@@ -2,6 +2,7 @@ package com.github.gserej.anonymizationtool;
 
 import com.github.gserej.anonymizationtool.storage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.storage.StorageService;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -53,8 +54,7 @@ public class FileUploadController {
 
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
-                                   RedirectAttributes redirectAttributes,
-                                   Model model) {
+                                   RedirectAttributes redirectAttributes) {
 
         storageService.store(file);
         redirectAttributes.addFlashAttribute("message",
@@ -62,10 +62,18 @@ public class FileUploadController {
 
         File fileToProcess = storageService.loadAsFile(file.getOriginalFilename());
         try {
-            PrintDrawLocations.PrintDrawLocation(fileToProcess);
-            redirectAttributes.addFlashAttribute("rectList",
-                    PrintDrawLocations.getRectangleList());
-//            model.addAttribute("rectList", PrintDrawLocations.getRectangleList());
+            String fileExtension = FilenameUtils.getExtension(fileToProcess.getName());
+
+            if (fileExtension.equals("pdf")) {
+                PrintDrawLocations.PrintDrawLocation(fileToProcess);
+                redirectAttributes.addFlashAttribute("rectList",
+                        PrintDrawLocations.getRectangleBoxList());
+            } else if (fileExtension.equals("jpg") || fileExtension.equals("png")) {
+                System.out.println("image file found");
+                TesseractOCR.imageFileOCR(fileToProcess);
+            } else {
+                redirectAttributes.addFlashAttribute("message", "You uploaded file with wrong file extension.");
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -76,8 +84,8 @@ public class FileUploadController {
 
     @PostMapping(value = "/api")
     @ResponseBody
-    public String postJson(@RequestBody List<Rectangle> rectangles, HttpServletRequest request) {
-        System.out.println(rectangles.toString());
+    public String postJson(@RequestBody List<RectangleBox> rectangleBoxes, HttpServletRequest request) {
+        System.out.println(rectangleBoxes.toString());
         return null;
     }
 
