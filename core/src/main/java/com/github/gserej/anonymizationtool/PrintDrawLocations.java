@@ -38,7 +38,6 @@ import java.util.List;
 
 public class PrintDrawLocations extends PDFTextStripper {
     private static final int SCALE = 5;
-    static List<RectangleBox> rectangleBoxList = new ArrayList<>();
     private final String filename;
     private final PDDocument document;
     private BufferedImage image;
@@ -53,9 +52,6 @@ public class PrintDrawLocations extends PDFTextStripper {
         this.filename = filename;
     }
 
-    static List<RectangleBox> getRectangleBoxList() {
-        return rectangleBoxList;
-    }
 
     public static void PrintDrawLocation(File file) throws IOException {
 
@@ -210,7 +206,7 @@ public class PrintDrawLocations extends PDFTextStripper {
                     1);
 
 
-            rectangleBoxList.add(rectangleBox);
+            RectangleBoxList.rectangleBoxList.add(rectangleBox);
             g2d.draw(s);
         }
     }

@@ -2,11 +2,14 @@ package com.github.gserej.anonymizationtool;
 
 import com.github.gserej.anonymizationtool.storage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.storage.StorageService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +19,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Controller
 public class FileUploadController {
 
@@ -33,9 +39,10 @@ public class FileUploadController {
     @GetMapping("/")
     public String listUploadedFiles(Model model) throws IOException {
 
+
         model.addAttribute("files", storageService.loadAll().map(
                 path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
-                        "serveFile", path.getFileName().toString()).build().toString())
+                        "serveFile", path.getFileName().toString()).build().toString()).filter(f -> f.endsWith(".pdf"))
                 .collect(Collectors.toList()));
 
         return "pageviewer";
@@ -65,14 +72,33 @@ public class FileUploadController {
             String fileExtension = FilenameUtils.getExtension(fileToProcess.getName());
 
             if (fileExtension.equals("pdf")) {
+                log.info("pdf file found");
                 PrintDrawLocations.PrintDrawLocation(fileToProcess);
                 redirectAttributes.addFlashAttribute("rectList",
-                        PrintDrawLocations.getRectangleBoxList());
+                        RectangleBoxList.getRectangleBoxList());
             } else if (fileExtension.equals("jpg") || fileExtension.equals("png")) {
-                System.out.println("image file found");
-                TesseractOCR.imageFileOCR(fileToProcess);
+                log.info("image file found");
+                String pathToImagePdfFile = CreatePdfFromImage.createPdfFromImage(fileToProcess, fileToProcess.getName());
+
+
+                File imagePdfFile = new File(pathToImagePdfFile);
+                FileInputStream input = new FileInputStream(imagePdfFile);
+                log.info(imagePdfFile.getName());
+                MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
+                        imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(input));
+                storageService.store(multipartFile);
+
+                AtomicBoolean done = new AtomicBoolean(false);
+                Runnable r = () -> {
+                    TesseractOCR.imageFileOCR(fileToProcess);
+                    done.set(true);
+                };
+                new Thread(r).start();
+                log.info("OCR status: " + done);
+
+
             } else {
-                redirectAttributes.addFlashAttribute("message", "You uploaded file with wrong file extension.");
+                redirectAttributes.addFlashAttribute("message", "You uploaded the file with a wrong file extension.");
             }
 
         } catch (IOException e) {
@@ -85,7 +111,7 @@ public class FileUploadController {
     @PostMapping(value = "/api")
     @ResponseBody
     public String postJson(@RequestBody List<RectangleBox> rectangleBoxes, HttpServletRequest request) {
-        System.out.println(rectangleBoxes.toString());
+        log.info(rectangleBoxes.toString());
         return null;
     }
 
