@@ -15,8 +15,9 @@ public class RectangleBox {
     private float y;
     private float w;
     private float h;
+    private String word;
 
-    RectangleBox(boolean marked, float x, float y, float w, float h, int typeOfData) {
+    RectangleBox(boolean marked, float x, float y, float w, float h, int typeOfData, String word) {
         this.id = count.incrementAndGet();
         this.marked = marked;
         this.x = x;
@@ -24,6 +25,15 @@ public class RectangleBox {
         this.w = w;
         this.h = h;
         this.typeOfData = typeOfData;
+        this.word = word;
+    }
+
+    public String getWord() {
+        return word;
+    }
+
+    public void setWord(String word) {
+        this.word = word;
     }
 
     public int getTypeOfData() {
@@ -93,6 +103,7 @@ public class RectangleBox {
                 ", y=" + y +
                 ", w=" + w +
                 ", h=" + h +
+                ", word='" + word + '\'' +
                 '}';
     }
 }

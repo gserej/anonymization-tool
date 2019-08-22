@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,6 +29,21 @@ import java.util.stream.Collectors;
 public class FileUploadController {
 
     private final StorageService storageService;
+
+    private static boolean ocrDone = false;
+    private static Object modelObject;
+
+    static boolean isOcrDone() {
+        return ocrDone;
+    }
+
+    public static Object getModelObject() {
+        return modelObject;
+    }
+
+    public static void setModelObject(Object modelObject) {
+        FileUploadController.modelObject = modelObject;
+    }
 
     @Autowired
     public FileUploadController(StorageService storageService) {
@@ -44,6 +58,8 @@ public class FileUploadController {
                 path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
                         "serveFile", path.getFileName().toString()).build().toString()).filter(f -> f.endsWith(".pdf"))
                 .collect(Collectors.toList()));
+
+        model.addAttribute("rectListModel", getModelObject());
 
         return "pageviewer";
     }
@@ -61,7 +77,7 @@ public class FileUploadController {
 
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
-                                   RedirectAttributes redirectAttributes) {
+                                   RedirectAttributes redirectAttributes, Model model) {
 
         storageService.store(file);
         redirectAttributes.addFlashAttribute("message",
@@ -70,12 +86,13 @@ public class FileUploadController {
         File fileToProcess = storageService.loadAsFile(file.getOriginalFilename());
         try {
             String fileExtension = FilenameUtils.getExtension(fileToProcess.getName());
-
             if (fileExtension.equals("pdf")) {
                 log.info("pdf file found");
                 PrintDrawLocations.PrintDrawLocation(fileToProcess);
-                redirectAttributes.addFlashAttribute("rectList",
-                        RectangleBoxList.getRectangleBoxList());
+                setModelObject(RectangleBoxList.getRectangleBoxList());
+
+                log.info(RectangleBoxList.getRectangleBoxList().toString());
+
             } else if (fileExtension.equals("jpg") || fileExtension.equals("png")) {
                 log.info("image file found");
                 String pathToImagePdfFile = CreatePdfFromImage.createPdfFromImage(fileToProcess, fileToProcess.getName());
@@ -83,18 +100,26 @@ public class FileUploadController {
 
                 File imagePdfFile = new File(pathToImagePdfFile);
                 FileInputStream input = new FileInputStream(imagePdfFile);
-                log.info(imagePdfFile.getName());
+//                log.info(imagePdfFile.getName());
                 MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
                         imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(input));
                 storageService.store(multipartFile);
+                File loadedPdfFile = storageService.loadAsFile(multipartFile.getOriginalFilename());
 
-                AtomicBoolean done = new AtomicBoolean(false);
+                ocrDone = true;
                 Runnable r = () -> {
                     TesseractOCR.imageFileOCR(fileToProcess);
-                    done.set(true);
+                    log.info("OCR status: done");
+                    try {
+                        PrintDrawLocations.PrintDrawLocation(loadedPdfFile);
+                        log.info("Processing imgPdfFile status: done");
+                        setModelObject(RectangleBoxList.getRectangleBoxList());
+                        log.info(RectangleBoxList.getRectangleBoxList().toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 };
                 new Thread(r).start();
-                log.info("OCR status: " + done);
 
 
             } else {

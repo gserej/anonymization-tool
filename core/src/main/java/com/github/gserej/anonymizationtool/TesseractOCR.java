@@ -23,9 +23,9 @@ class TesseractOCR {
         // ITesseract instance = new Tesseract1(); // JNA Direct Mapping
         try {
             String resourcePath = ResourceUtils.getFile("classpath:tessdata").getAbsolutePath();
-            log.info(resourcePath);
+//            log.info(resourcePath);
             instance.setDatapath(resourcePath); // path to tessdata directory
-            log.info("Success");
+//            log.info("Success");
         } catch (FileNotFoundException e) {
             log.error(e.getMessage());
             return false;
@@ -47,7 +47,8 @@ class TesseractOCR {
                         (float) word.getBoundingBox().getY(),
                         (float) word.getBoundingBox().getWidth(),
                         (float) word.getBoundingBox().getHeight(),
-                        1);
+                        1,
+                        word.getText());
                 RectangleBoxList.rectangleBoxList.add(rectangleBox);
             }
             return true;

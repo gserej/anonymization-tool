@@ -16,6 +16,7 @@
  */
 package com.github.gserej.anonymizationtool;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -36,6 +37,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class PrintDrawLocations extends PDFTextStripper {
     private static final int SCALE = 5;
     private final String filename;
@@ -133,81 +135,104 @@ public class PrintDrawLocations extends PDFTextStripper {
     protected void writeString(String string, List<TextPosition> textPositions) throws IOException {
         String wordSeparator = getWordSeparator();
         List<TextPosition> word = new ArrayList<>();
-        for (TextPosition text : textPositions) {
-            String thisChar = text.getUnicode();
-            if (thisChar != null && thisChar.length() >= 1) {
-                if (!thisChar.equals(wordSeparator)) {
-                    word.add(text);
-                } else if (!word.isEmpty()) {
-                    printWord(word);
-                    word.clear();
+        boolean ocrDone = FileUploadController.isOcrDone();
+
+        if (ocrDone) {
+            printWord(word, true);
+        } else {
+            for (TextPosition text : textPositions) {
+                String thisChar = text.getUnicode();
+                if (thisChar != null && thisChar.length() >= 1) {
+                    if (!thisChar.equals(wordSeparator)) {
+                        word.add(text);
+                    } else if (!word.isEmpty()) {
+                        printWord(word, false);
+                        word.clear();
+                    }
                 }
             }
-        }
-        if (!word.isEmpty()) {
-            printWord(word);
-            word.clear();
+            if (!word.isEmpty()) {
+                printWord(word, false);
+                word.clear();
+            }
         }
     }
 
-    private void printWord(List<TextPosition> word) throws IOException {
-        StringBuilder builder = new StringBuilder();
+    private void printWord(List<TextPosition> word, boolean imgType) throws IOException {
+        if (!imgType) {
+            StringBuilder builder = new StringBuilder();
+            TextPosition text = word.get(0);
 
+            PDFont font = text.getFont();
+            BoundingBox bbox = font.getBoundingBox();
+            float xadvance = 0.0f;
 
-        TextPosition text = word.get(0);
-
-        PDFont font = text.getFont();
-        BoundingBox bbox = font.getBoundingBox();
-        float xadvance = 0.0f;
-
-        for (TextPosition letter : word) {
-            builder.append(letter.getUnicode());
-            xadvance += font.getWidth(letter.getCharacterCodes()[0]);
-        }
-        String singleWord = builder.toString();
-//        System.out.println(builder.toString());
-        if (DataTypeValidators.isValidNIP(singleWord) ||
-                DataTypeValidators.isValidPesel(singleWord) ||
-                DataTypeValidators.isValidREGON(singleWord) ||
-                GenericValidator.isDate(singleWord, null) ||
-                singleWord.equals("PX031608")) {
-
-            AffineTransform at = text.getTextMatrix().createAffineTransform();
-//             red
-
-//            Rectangle2D.Float rect = new Rectangle2D.Float(0, 0,
-//                    rectWidth / text.getTextMatrix().getScalingFactorX(),
-//                    text.getHeightDir() / text.getTextMatrix().getScalingFactorY());
-//            Shape s = at.createTransformedShape(rect);
-//            s = flipAT.createTransformedShape(s);
-//            s = rotateAT.createTransformedShape(s);
-//            g2d.setColor(Color.red);
-//            g2d.draw(s);
-
-            // in blue:
-            Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f, xadvance, bbox.getHeight() * 0.85f);
-            if (font instanceof PDType3Font) {
-                // bbox and font matrix are unscaled
-                at.concatenate(font.getFontMatrix().createAffineTransform());
-            } else {
-                // bbox and font matrix are already scaled to 1000
-                at.scale(1 / 1000f, 1 / 1000f);
+            for (TextPosition letter : word) {
+                builder.append(letter.getUnicode());
+                xadvance += font.getWidth(letter.getCharacterCodes()[0]);
             }
-            Shape s = at.createTransformedShape(rect);
-            s = flipAT.createTransformedShape(s);
-            s = rotateAT.createTransformedShape(s);
+            String singleWord = builder.toString();
+//        System.out.println(builder.toString());
+            if (DataTypeValidators.isValidNIP(singleWord) ||
+                    DataTypeValidators.isValidPesel(singleWord) ||
+                    DataTypeValidators.isValidREGON(singleWord) ||
+                    GenericValidator.isDate(singleWord, null) ||
+                    singleWord.equals("PX031608")) {
 
-            g2d.setColor(Color.blue);
+                AffineTransform at = text.getTextMatrix().createAffineTransform();
+
+                // in blue:
+                Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f,
+                        xadvance, bbox.getHeight() * 0.85f);
+                if (font instanceof PDType3Font) {
+                    // bbox and font matrix are unscaled
+                    at.concatenate(font.getFontMatrix().createAffineTransform());
+                } else {
+                    // bbox and font matrix are already scaled to 1000
+                    at.scale(1 / 1000f, 1 / 1000f);
+                }
+                Shape s = at.createTransformedShape(rect);
+                s = flipAT.createTransformedShape(s);
+                s = rotateAT.createTransformedShape(s);
+
+                g2d.setColor(Color.blue);
 //        System.out.println(s.getBounds2D());
-            RectangleBox rectangleBox = new RectangleBox(false, (float) s.getBounds2D().getX(),
-                    (float) s.getBounds2D().getY(),
-                    (float) s.getBounds2D().getWidth(),
-                    (float) s.getBounds2D().getHeight(),
-                    1);
+                RectangleBox rectangleBox = new RectangleBox(false, (float) s.getBounds2D().getX(),
+                        (float) s.getBounds2D().getY(),
+                        (float) s.getBounds2D().getWidth(),
+                        (float) s.getBounds2D().getHeight(),
+                        1,
+                        singleWord);
 
 
-            RectangleBoxList.rectangleBoxList.add(rectangleBox);
-            g2d.draw(s);
+                RectangleBoxList.rectangleBoxList.add(rectangleBox);
+                g2d.draw(s);
+            }
+        } else {
+            TextPosition text = word.get(0);
+            String singleWord = "";
+            for (int i = 0; i < RectangleBoxList.rectangleBoxList.size(); i++) {
+                singleWord = RectangleBoxList.rectangleBoxList.get(i).getWord();
+
+                if (true) {
+
+
+                    AffineTransform at = text.getTextMatrix().createAffineTransform();
+
+                    Rectangle2D.Float rect = new Rectangle2D.Float(RectangleBoxList.rectangleBoxList.get(i).getX(),
+                            RectangleBoxList.rectangleBoxList.get(i).getY(),
+                            RectangleBoxList.rectangleBoxList.get(i).getW(),
+                            RectangleBoxList.rectangleBoxList.get(i).getH());
+                    Shape s = at.createTransformedShape(rect);
+                    s = flipAT.createTransformedShape(s);
+                    s = rotateAT.createTransformedShape(s);
+
+                    g2d.setColor(Color.blue);
+                    log.info(s.toString());
+                    g2d.draw(s);
+
+                }
+            }
         }
     }
 }

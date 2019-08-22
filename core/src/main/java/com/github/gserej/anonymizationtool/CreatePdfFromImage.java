@@ -17,7 +17,7 @@ class CreatePdfFromImage {
 
         new File("temp-storage").mkdir();
         String pdfPath = "temp-storage/" + FilenameUtils.removeExtension(fileName) + ".pdf";
-        log.info(fileName);
+//        log.info(fileName);
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage();
             doc.addPage(page);

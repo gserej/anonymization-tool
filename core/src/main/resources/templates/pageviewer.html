@@ -82,7 +82,7 @@ limitations under the License.
 
 <script th:inline="javascript">
     var DEFAULT_URL = /*[[${files}]]*/ '../static/compressed.tracemonkey-pldi-09.pdf';
-    var rectListJS = /*[[${rectList}]]*/ [];
+    var rectListJS = [[${rectListModel}]];
     console.log(rectListJS);
 </script>
 
