@@ -1,8 +1,12 @@
 package com.github.gserej.anonymizationtool;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
 
+
+@Service
 public class DataTypeValidators {
+
 
     static boolean isValidPesel(String pesel) {
         pesel = pesel.trim();
@@ -26,9 +30,7 @@ public class DataTypeValidators {
         sum %= 10;
 
         return (sum == checksum);
-
     }
-
 
     static boolean isValidNIP(String nip) {
         int nsize = nip.length();
@@ -40,10 +42,10 @@ public class DataTypeValidators {
         }
         int[] weights = {6, 5, 7, 2, 3, 4, 5, 6, 7};
         int j = 0, sum = 0, control = 0;
-        int csum = Integer.valueOf(nip.substring(nsize - 1));
+        int csum = Integer.parseInt(nip.substring(nsize - 1));
         for (int i = 0; i < nsize - 1; i++) {
             char c = nip.charAt(i);
-            j = Integer.valueOf(String.valueOf(c));
+            j = Integer.parseInt(String.valueOf(c));
             sum += j * weights[i];
         }
         control = sum % 11;
@@ -70,10 +72,10 @@ public class DataTypeValidators {
         }
 
         int j = 0, sum = 0, control = 0;
-        int csum = Integer.valueOf(regon.substring(rsize - 1));
+        int csum = Integer.parseInt(regon.substring(rsize - 1));
         for (int i = 0; i < rsize - 1; i++) {
             char c = regon.charAt(i);
-            j = Integer.valueOf(String.valueOf(c));
+            j = Integer.parseInt(String.valueOf(c));
             sum += j * weights[i];
         }
 
@@ -82,7 +84,6 @@ public class DataTypeValidators {
             control = 0;
         }
         return (control == csum);
-
     }
 
 }

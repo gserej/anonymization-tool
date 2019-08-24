@@ -42,10 +42,11 @@ var loadingTask = pdfjsLib.getDocument({
     cMapUrl: CMAP_URL,
     cMapPacked: CMAP_PACKED
 });
+$("#pdf-meta").hide();
+
 
 function render() {
     $(".page").remove();
-
     loadingTask.promise.then(function (pdfDocument) {
         number_pages = pdfDocument.numPages;
         document.getElementById('page_count').textContent = number_pages;
@@ -60,17 +61,40 @@ function render() {
                 textLayerFactory: new pdfjsViewer.DefaultTextLayerFactory()
             });
             pdfPageView.setPdfPage(pdfPage);
+            $("#upload-form").hide();
+            $("#pdf-meta").show();
+
             return pdfPageView.draw();
-        });
+        })
     });
 }
 
 render();
 
+$("#pdf-prev").prop("disabled", true);
+if (PAGE_TO_VIEW === number_pages) {
+    $("#pdf-next").prop("disabled", true);
+}
+
+// $("#pdf-draw2").prop("disabled", true);
+function disableEnablePrevNext() {
+    if (PAGE_TO_VIEW === 1) {
+        $("#pdf-prev").prop("disabled", true);
+    } else {
+        $("#pdf-prev").prop("disabled", false);
+    }
+    if (PAGE_TO_VIEW === number_pages) {
+        $("#pdf-next").prop("disabled", true);
+    } else {
+        $("#pdf-next").prop("disabled", false);
+    }
+}
+
 $("#pdf-prev").on('click', function () {
     if (PAGE_TO_VIEW !== 1) {
         PAGE_TO_VIEW--;
         render();
+        disableEnablePrevNext();
     }
 });
 
@@ -78,6 +102,7 @@ $("#pdf-next").on('click', function () {
     if (PAGE_TO_VIEW !== number_pages) {
         PAGE_TO_VIEW++;
         render();
+        disableEnablePrevNext();
     }
 });
 
@@ -142,7 +167,9 @@ $("#draw").on('click', function () {
 
     function drawAllRed() {
         for (var i = 0, len = rects.length; i < len; i++) {
-            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, rects[i].id);
+            if (rects[i].page === PAGE_TO_VIEW) {
+                drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, rects[i].id);
+            }
         }
     }
 

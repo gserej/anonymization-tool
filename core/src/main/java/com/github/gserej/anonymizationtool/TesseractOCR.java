@@ -5,6 +5,7 @@ import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.Word;
+import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
 import javax.imageio.ImageIO;
@@ -15,7 +16,18 @@ import java.io.IOException;
 import java.util.List;
 
 @Slf4j
+@Service
 class TesseractOCR {
+
+    private static float ratio = 1;
+
+    public static float getRatio() {
+        return ratio;
+    }
+
+    public static void setRatio(float ratio) {
+        TesseractOCR.ratio = ratio;
+    }
 
     static boolean imageFileOCR(File imageFile) {
 
@@ -23,13 +35,12 @@ class TesseractOCR {
         // ITesseract instance = new Tesseract1(); // JNA Direct Mapping
         try {
             String resourcePath = ResourceUtils.getFile("classpath:tessdata").getAbsolutePath();
-//            log.info(resourcePath);
             instance.setDatapath(resourcePath); // path to tessdata directory
-//            log.info("Success");
         } catch (FileNotFoundException e) {
             log.error(e.getMessage());
             return false;
         }
+
         BufferedImage bi;
 
         try {
@@ -43,19 +54,17 @@ class TesseractOCR {
 //                log.info(word.getBoundingBox().toString());
 
                 RectangleBox rectangleBox = new RectangleBox(false,
-                        (float) word.getBoundingBox().getX(),
-                        (float) word.getBoundingBox().getY(),
-                        (float) word.getBoundingBox().getWidth(),
-                        (float) word.getBoundingBox().getHeight(),
-                        1,
-                        word.getText());
+                        ratio * (float) word.getBoundingBox().getX(),
+                        ratio * (float) word.getBoundingBox().getY(),
+                        ratio * (float) word.getBoundingBox().getWidth(),
+                        ratio * (float) word.getBoundingBox().getHeight(),
+                        1, word.getText(), 1);
                 RectangleBoxList.rectangleBoxList.add(rectangleBox);
             }
             return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return false;
     }
 }

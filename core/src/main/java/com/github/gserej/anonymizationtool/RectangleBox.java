@@ -9,6 +9,7 @@ public class RectangleBox {
 
     private static final AtomicInteger count = new AtomicInteger(-1);
     private int id;
+    private int page;
     private boolean marked;
     private int typeOfData;
     private float x;
@@ -17,8 +18,10 @@ public class RectangleBox {
     private float h;
     private String word;
 
-    RectangleBox(boolean marked, float x, float y, float w, float h, int typeOfData, String word) {
+
+    RectangleBox(boolean marked, float x, float y, float w, float h, int typeOfData, String word, int page) {
         this.id = count.incrementAndGet();
+
         this.marked = marked;
         this.x = x;
         this.y = y;
@@ -26,6 +29,15 @@ public class RectangleBox {
         this.h = h;
         this.typeOfData = typeOfData;
         this.word = word;
+        this.page = page;
+    }
+
+    public int getPage() {
+        return page;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
     }
 
     public String getWord() {
@@ -97,6 +109,7 @@ public class RectangleBox {
     public String toString() {
         return "RectangleBox{" +
                 "id=" + id +
+                ", page=" + page +
                 ", marked=" + marked +
                 ", typeOfData=" + typeOfData +
                 ", x=" + x +

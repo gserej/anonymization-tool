@@ -1,22 +1,32 @@
 package com.github.gserej.anonymizationtool;
 
+import com.github.gserej.anonymizationtool.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Slf4j
+@Service
 class CreatePdfFromImage {
 
-    static String createPdfFromImage(File imageFile, String fileName) throws IOException {
+    private static Path rootLocation;
 
-        new File("temp-storage").mkdir();
-        String pdfPath = "temp-storage/" + FilenameUtils.removeExtension(fileName) + ".pdf";
+    public CreatePdfFromImage(StorageProperties properties) {
+        rootLocation = Paths.get(properties.getLocation());
+    }
+
+    static String createPdfFromImage(File imageFile, String fileName) throws IOException {
+        new File(rootLocation + "/tmp").mkdir();
+        String pdfPath = rootLocation + "/tmp/" + FilenameUtils.removeExtension(fileName) + ".pdf";
 //        log.info(fileName);
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage();
@@ -27,23 +37,14 @@ class CreatePdfFromImage {
             // call LosslessFactory.createFromImage() instead
             PDImageXObject pdImage = PDImageXObject.createFromFile(imageFile.toString(), doc);
 
-            // draw the image at full size at (x=20, y=20)
             try (PDPageContentStream contents = new PDPageContentStream(doc, page)) {
-                float w;
-                float h;
-                if (page.getCropBox().getWidth() < pdImage.getWidth())
-                    w = page.getCropBox().getWidth();
-                else {
-                    w = pdImage.getWidth();
-                }
-
-                if (page.getCropBox().getHeight() < pdImage.getHeight())
-                    h = page.getCropBox().getHeight();
-                else {
-                    h = pdImage.getHeight();
-                }
-
-                contents.drawImage(pdImage, 0, 0, w, h);
+                float width = pdImage.getWidth();
+                float height = pdImage.getHeight();
+                float widthRatio = page.getCropBox().getWidth() / width;
+                float heightRatio = page.getCropBox().getHeight() / height;
+                float ratio = Math.min(widthRatio, heightRatio);
+                TesseractOCR.setRatio(ratio);
+                contents.drawImage(pdImage, page.getCropBox().getWidth() - ratio * width, page.getCropBox().getHeight() - ratio * height, ratio * width, ratio * height);
             }
 
             doc.save(pdfPath);

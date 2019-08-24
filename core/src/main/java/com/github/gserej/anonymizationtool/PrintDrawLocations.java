@@ -17,7 +17,6 @@
 package com.github.gserej.anonymizationtool;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.validator.GenericValidator;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -47,7 +46,15 @@ public class PrintDrawLocations extends PDFTextStripper {
     private AffineTransform rotateAT;
     private AffineTransform transAT;
     private Graphics2D g2d;
+    private static int pageNumber;
 
+    public static int getPageNumber() {
+        return pageNumber;
+    }
+
+    public static void setPageNumber(int pageNumber) {
+        PrintDrawLocations.pageNumber = pageNumber;
+    }
 
     public PrintDrawLocations(PDDocument document, String filename) throws IOException {
         this.document = document;
@@ -63,6 +70,7 @@ public class PrintDrawLocations extends PDFTextStripper {
             PrintDrawLocations stripper = new PrintDrawLocations(document, file.getName());
             stripper.setSortByPosition(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
+                setPageNumber(page + 1);
                 stripper.stripPage(page);
             }
 
@@ -138,7 +146,7 @@ public class PrintDrawLocations extends PDFTextStripper {
         boolean ocrDone = FileUploadController.isOcrDone();
 
         if (ocrDone) {
-            printWord(word, true);
+            printWord(word, true, 1);
         } else {
             for (TextPosition text : textPositions) {
                 String thisChar = text.getUnicode();
@@ -146,19 +154,19 @@ public class PrintDrawLocations extends PDFTextStripper {
                     if (!thisChar.equals(wordSeparator)) {
                         word.add(text);
                     } else if (!word.isEmpty()) {
-                        printWord(word, false);
+                        printWord(word, false, getPageNumber());
                         word.clear();
                     }
                 }
             }
             if (!word.isEmpty()) {
-                printWord(word, false);
+                printWord(word, false, getPageNumber());
                 word.clear();
             }
         }
     }
 
-    private void printWord(List<TextPosition> word, boolean imgType) throws IOException {
+    private void printWord(List<TextPosition> word, boolean imgType, int page) throws IOException {
         if (!imgType) {
             StringBuilder builder = new StringBuilder();
             TextPosition text = word.get(0);
@@ -172,15 +180,14 @@ public class PrintDrawLocations extends PDFTextStripper {
                 xadvance += font.getWidth(letter.getCharacterCodes()[0]);
             }
             String singleWord = builder.toString();
-//        System.out.println(builder.toString());
-            if (DataTypeValidators.isValidNIP(singleWord) ||
-                    DataTypeValidators.isValidPesel(singleWord) ||
-                    DataTypeValidators.isValidREGON(singleWord) ||
-                    GenericValidator.isDate(singleWord, null) ||
-                    singleWord.equals("PX031608")) {
+            AffineTransform at = text.getTextMatrix().createAffineTransform();
+//            if (DataTypeValidators.isValidNIP(singleWord) ||
+//                    DataTypeValidators.isValidPesel(singleWord) ||
+//                    DataTypeValidators.isValidREGON(singleWord) ||
+//                    GenericValidator.isDate(singleWord, null) ||
+//                    singleWord.equals("PX031608")) {
 
-                AffineTransform at = text.getTextMatrix().createAffineTransform();
-
+            if (singleWord.equals("Lorem")) {
                 // in blue:
                 Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f,
                         xadvance, bbox.getHeight() * 0.85f);
@@ -196,13 +203,11 @@ public class PrintDrawLocations extends PDFTextStripper {
                 s = rotateAT.createTransformedShape(s);
 
                 g2d.setColor(Color.blue);
-//        System.out.println(s.getBounds2D());
                 RectangleBox rectangleBox = new RectangleBox(false, (float) s.getBounds2D().getX(),
                         (float) s.getBounds2D().getY(),
                         (float) s.getBounds2D().getWidth(),
                         (float) s.getBounds2D().getHeight(),
-                        1,
-                        singleWord);
+                        1, singleWord, page);
 
 
                 RectangleBoxList.rectangleBoxList.add(rectangleBox);
@@ -210,14 +215,16 @@ public class PrintDrawLocations extends PDFTextStripper {
             }
         } else {
             TextPosition text = word.get(0);
-            String singleWord = "";
+            AffineTransform at = text.getTextMatrix().createAffineTransform();
             for (int i = 0; i < RectangleBoxList.rectangleBoxList.size(); i++) {
-                singleWord = RectangleBoxList.rectangleBoxList.get(i).getWord();
+                String singleWord = RectangleBoxList.rectangleBoxList.get(i).getWord();
+//                if (DataTypeValidators.isValidNIP(singleWord) ||
+//                        DataTypeValidators.isValidPesel(singleWord) ||
+//                        DataTypeValidators.isValidREGON(singleWord) ||
+//                        GenericValidator.isDate(singleWord, null) ||
+//                        singleWord.equals("PX031608")) {
 
                 if (true) {
-
-
-                    AffineTransform at = text.getTextMatrix().createAffineTransform();
 
                     Rectangle2D.Float rect = new Rectangle2D.Float(RectangleBoxList.rectangleBoxList.get(i).getX(),
                             RectangleBoxList.rectangleBoxList.get(i).getY(),

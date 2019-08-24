@@ -14,8 +14,6 @@ public class AnonymizationToolApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(AnonymizationToolApplication.class, args);
-
-
     }
 
     @Bean

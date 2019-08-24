@@ -37,11 +37,11 @@ public class FileUploadController {
         return ocrDone;
     }
 
-    public static Object getModelObject() {
+    static Object getModelObject() {
         return modelObject;
     }
 
-    public static void setModelObject(Object modelObject) {
+    static void setModelObject(Object modelObject) {
         FileUploadController.modelObject = modelObject;
     }
 
@@ -64,6 +64,11 @@ public class FileUploadController {
         return "pageviewer";
     }
 
+
+    @ModelAttribute("rectListModel")
+    private Object rectListModel() {
+        return getModelObject();
+    }
 
     @GetMapping("/files/{filename:.+}")
     @ResponseBody
@@ -90,7 +95,6 @@ public class FileUploadController {
                 log.info("pdf file found");
                 PrintDrawLocations.PrintDrawLocation(fileToProcess);
                 setModelObject(RectangleBoxList.getRectangleBoxList());
-
                 log.info(RectangleBoxList.getRectangleBoxList().toString());
 
             } else if (fileExtension.equals("jpg") || fileExtension.equals("png")) {

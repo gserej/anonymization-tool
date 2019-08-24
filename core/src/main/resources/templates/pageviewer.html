@@ -54,7 +54,7 @@ limitations under the License.
     </ul>
 </div>
 
-<div>
+<div id="upload-form">
     <form action="/" enctype="multipart/form-data" method="POST">
         <table>
             <tr>
@@ -70,9 +70,8 @@ limitations under the License.
     <div id="pdf-buttons">
         <button id="pdf-prev">Previous</button>
         <button id="pdf-next">Next</button>
-        <button id="draw">Draw</button>
-        <button id="draw2">Draw2</button>
-
+        <button id="draw">Show Boxes</button>
+        <button id="draw2">Confirm</button>
         <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
     </div>
 
@@ -81,7 +80,7 @@ limitations under the License.
 <div class="pdfViewer singlePageView" id="pageContainer"></div>
 
 <script th:inline="javascript">
-    var DEFAULT_URL = /*[[${files}]]*/ '../static/compressed.tracemonkey-pldi-09.pdf';
+    var DEFAULT_URL = [[${files}]];
     var rectListJS = [[${rectListModel}]];
     console.log(rectListJS);
 </script>
