@@ -33,7 +33,7 @@ var CMAP_PACKED = true;
 var PAGE_TO_VIEW = 1;
 var SCALE = 1.0;
 var SCALE_FIXED = SCALE / 0.75;
-var number_pages;
+var number_of_pages;
 
 var container = document.getElementById('pageContainer');
 
@@ -48,8 +48,8 @@ $("#pdf-meta").hide();
 function render() {
     $(".page").remove();
     loadingTask.promise.then(function (pdfDocument) {
-        number_pages = pdfDocument.numPages;
-        document.getElementById('page_count').textContent = number_pages;
+        number_of_pages = pdfDocument.numPages;
+        document.getElementById('page_count').textContent = number_of_pages;
         document.getElementById('page_num').textContent = PAGE_TO_VIEW;
         return pdfDocument.getPage(PAGE_TO_VIEW).then(function (pdfPage) {
             var pdfPageView = new pdfjsViewer.PDFPageView({
@@ -63,6 +63,12 @@ function render() {
             pdfPageView.setPdfPage(pdfPage);
             $("#upload-form").hide();
             $("#pdf-meta").show();
+            if (PAGE_TO_VIEW === number_of_pages) {
+                $("#pdf-next").prop("disabled", true);
+            } else {
+                $("#pdf-next").prop("disabled", false);
+            }
+
 
             return pdfPageView.draw();
         })
@@ -70,11 +76,7 @@ function render() {
 }
 
 render();
-
 $("#pdf-prev").prop("disabled", true);
-if (PAGE_TO_VIEW === number_pages) {
-    $("#pdf-next").prop("disabled", true);
-}
 
 // $("#pdf-draw2").prop("disabled", true);
 function disableEnablePrevNext() {
@@ -83,7 +85,7 @@ function disableEnablePrevNext() {
     } else {
         $("#pdf-prev").prop("disabled", false);
     }
-    if (PAGE_TO_VIEW === number_pages) {
+    if (PAGE_TO_VIEW === number_of_pages) {
         $("#pdf-next").prop("disabled", true);
     } else {
         $("#pdf-next").prop("disabled", false);
@@ -99,7 +101,7 @@ $("#pdf-prev").on('click', function () {
 });
 
 $("#pdf-next").on('click', function () {
-    if (PAGE_TO_VIEW !== number_pages) {
+    if (PAGE_TO_VIEW !== number_of_pages) {
         PAGE_TO_VIEW++;
         render();
         disableEnablePrevNext();

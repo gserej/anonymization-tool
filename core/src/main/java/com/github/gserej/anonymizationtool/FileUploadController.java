@@ -82,7 +82,7 @@ public class FileUploadController {
 
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
-                                   RedirectAttributes redirectAttributes, Model model) {
+                                   RedirectAttributes redirectAttributes) {
 
         storageService.store(file);
         redirectAttributes.addFlashAttribute("message",
@@ -94,6 +94,7 @@ public class FileUploadController {
             if (fileExtension.equals("pdf")) {
                 log.info("pdf file found");
                 PrintDrawLocations.PrintDrawLocation(fileToProcess);
+                PrintImageLocations.imageLocations(fileToProcess);
                 setModelObject(RectangleBoxList.getRectangleBoxList());
                 log.info(RectangleBoxList.getRectangleBoxList().toString());
 
@@ -112,7 +113,7 @@ public class FileUploadController {
 
                 ocrDone = true;
                 Runnable r = () -> {
-                    TesseractOCR.imageFileOCR(fileToProcess);
+                    TesseractOCR.imageFileOCR(fileToProcess, true, null);
                     log.info("OCR status: done");
                     try {
                         PrintDrawLocations.PrintDrawLocation(loadedPdfFile);

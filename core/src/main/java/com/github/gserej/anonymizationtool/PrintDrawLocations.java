@@ -64,12 +64,14 @@ public class PrintDrawLocations extends PDFTextStripper {
 
     public static void PrintDrawLocation(File file) throws IOException {
 
-        try (
-                PDDocument document = PDDocument.load(file)
-        ) {
+        try (PDDocument document = PDDocument.load(file)) {
+
+
+
             PrintDrawLocations stripper = new PrintDrawLocations(document, file.getName());
             stripper.setSortByPosition(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
+
                 setPageNumber(page + 1);
                 stripper.stripPage(page);
             }
@@ -79,6 +81,7 @@ public class PrintDrawLocations extends PDFTextStripper {
         }
 
     }
+
 
     private void stripPage(int page) throws IOException {
         PDFRenderer pdfRenderer = new PDFRenderer(document);
