@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class DataTypeValidators {
 
-
     static boolean isValidPesel(String pesel) {
         pesel = pesel.trim();
         if (pesel.length() != 11) return false;

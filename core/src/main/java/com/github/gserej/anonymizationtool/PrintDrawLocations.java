@@ -16,6 +16,8 @@
  */
 package com.github.gserej.anonymizationtool;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -26,6 +28,7 @@ import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.apache.pdfbox.util.Matrix;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -39,39 +42,37 @@ import java.util.List;
 @Slf4j
 public class PrintDrawLocations extends PDFTextStripper {
     private static final int SCALE = 5;
+
+
     private final String filename;
     private final PDDocument document;
-    private BufferedImage image;
     private AffineTransform flipAT;
     private AffineTransform rotateAT;
-    private AffineTransform transAT;
     private Graphics2D g2d;
+
+    @Setter
+    @Getter
     private static int pageNumber;
 
-    public static int getPageNumber() {
-        return pageNumber;
-    }
+    @Getter
+    @Setter
+    private boolean readyToDraw;
 
-    public static void setPageNumber(int pageNumber) {
-        PrintDrawLocations.pageNumber = pageNumber;
-    }
 
-    public PrintDrawLocations(PDDocument document, String filename) throws IOException {
+    private PrintDrawLocations(PDDocument document, String filename, boolean readyToDraw) throws IOException {
         this.document = document;
         this.filename = filename;
+        this.readyToDraw = readyToDraw;
     }
 
 
-    public static void PrintDrawLocation(File file) throws IOException {
+    static void PrintDrawLocation(File file, boolean readyToDraw) throws IOException {
 
         try (PDDocument document = PDDocument.load(file)) {
 
-
-
-            PrintDrawLocations stripper = new PrintDrawLocations(document, file.getName());
+            PrintDrawLocations stripper = new PrintDrawLocations(document, file.getName(), readyToDraw);
             stripper.setSortByPosition(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
-
                 setPageNumber(page + 1);
                 stripper.stripPage(page);
             }
@@ -82,13 +83,11 @@ public class PrintDrawLocations extends PDFTextStripper {
 
     }
 
-
     private void stripPage(int page) throws IOException {
         PDFRenderer pdfRenderer = new PDFRenderer(document);
-        image = pdfRenderer.renderImage(page, SCALE);
+        BufferedImage image = pdfRenderer.renderImage(page, SCALE);
 
         PDPage pdPage = document.getPage(page);
-        PDRectangle cropBox = pdPage.getCropBox();
 
         // flip y-axis
         flipAT = new AffineTransform();
@@ -116,8 +115,6 @@ public class PrintDrawLocations extends PDFTextStripper {
             rotateAT.rotate(Math.toRadians(rotation));
         }
 
-        // cropbox
-        transAT = AffineTransform.getTranslateInstance(-cropBox.getLowerLeftX(), cropBox.getLowerLeftY());
 
         g2d = image.createGraphics();
         g2d.setStroke(new BasicStroke(0.1f));
@@ -129,120 +126,107 @@ public class PrintDrawLocations extends PDFTextStripper {
         Writer dummy = new OutputStreamWriter(new ByteArrayOutputStream());
         writeText(document, dummy);
 
+        if (FileUploadController.isSinglePageOcrType()) {
+            drawWordImage();
+        }
+
         g2d.dispose();
 
-        String imageFilename;
-        imageFilename = "test.png";
+        String imageFilename = "test.png";
         int pt = imageFilename.lastIndexOf('.');
         imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
 
-        ImageIO.write(image, "png", new File("markedFiles/" + imageFilename));
+        if (readyToDraw) {
+            ImageIO.write(image, "png", new File("markedFiles/" + imageFilename));
+        }
     }
 
-    /**
-     * Override the default functionality of PDFTextStripper.
-     */
+    private void drawWordImage() {
+
+        Matrix matrix = new Matrix();
+        AffineTransform at = matrix.createAffineTransform();
+        for (int i = 0; i < RectangleBoxLists.rectangleBoxListMarked.size(); i++) {
+            Rectangle2D.Float rect = new Rectangle2D.Float(RectangleBoxLists.rectangleBoxListMarked.get(i).getX(),
+                    RectangleBoxLists.rectangleBoxListMarked.get(i).getY(),
+                    RectangleBoxLists.rectangleBoxListMarked.get(i).getW(),
+                    RectangleBoxLists.rectangleBoxListMarked.get(i).getH());
+
+            log.info(RectangleBoxLists.getRectangleBoxListParsed().get(i).getWord());
+
+            Shape s = at.createTransformedShape(rect);
+            s = rotateAT.createTransformedShape(s);
+            g2d.setColor(Color.black);
+            g2d.fill(s);
+
+        }
+    }
+
     @Override
     protected void writeString(String string, List<TextPosition> textPositions) throws IOException {
         String wordSeparator = getWordSeparator();
         List<TextPosition> word = new ArrayList<>();
-        boolean ocrDone = FileUploadController.isOcrDone();
 
-        if (ocrDone) {
-            printWord(word, true, 1);
-        } else {
-            for (TextPosition text : textPositions) {
-                String thisChar = text.getUnicode();
-                if (thisChar != null && thisChar.length() >= 1) {
-                    if (!thisChar.equals(wordSeparator)) {
-                        word.add(text);
-                    } else if (!word.isEmpty()) {
-                        printWord(word, false, getPageNumber());
-                        word.clear();
-                    }
+        for (TextPosition text : textPositions) {
+            String thisChar = text.getUnicode();
+            if (thisChar != null && thisChar.length() >= 1) {
+                if (!thisChar.equals(wordSeparator)) {
+                    word.add(text);
+                } else if (!word.isEmpty()) {
+                    printWord(word, getPageNumber());
+                    word.clear();
                 }
             }
-            if (!word.isEmpty()) {
-                printWord(word, false, getPageNumber());
-                word.clear();
-            }
+        }
+        if (!word.isEmpty()) {
+            printWord(word, getPageNumber());
+            word.clear();
         }
     }
 
-    private void printWord(List<TextPosition> word, boolean imgType, int page) throws IOException {
-        if (!imgType) {
-            StringBuilder builder = new StringBuilder();
-            TextPosition text = word.get(0);
 
-            PDFont font = text.getFont();
-            BoundingBox bbox = font.getBoundingBox();
-            float xadvance = 0.0f;
+    private void printWord(List<TextPosition> word, int page) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        TextPosition text = word.get(0);
 
-            for (TextPosition letter : word) {
-                builder.append(letter.getUnicode());
-                xadvance += font.getWidth(letter.getCharacterCodes()[0]);
-            }
-            String singleWord = builder.toString();
-            AffineTransform at = text.getTextMatrix().createAffineTransform();
-//            if (DataTypeValidators.isValidNIP(singleWord) ||
-//                    DataTypeValidators.isValidPesel(singleWord) ||
-//                    DataTypeValidators.isValidREGON(singleWord) ||
-//                    GenericValidator.isDate(singleWord, null) ||
-//                    singleWord.equals("PX031608")) {
+        PDFont font = text.getFont();
+        BoundingBox bbox = font.getBoundingBox();
+        float xadvance = 0.0f;
 
-            if (singleWord.equals("Lorem")) {
-                // in blue:
-                Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f,
-                        xadvance, bbox.getHeight() * 0.85f);
-                if (font instanceof PDType3Font) {
-                    // bbox and font matrix are unscaled
-                    at.concatenate(font.getFontMatrix().createAffineTransform());
-                } else {
-                    // bbox and font matrix are already scaled to 1000
-                    at.scale(1 / 1000f, 1 / 1000f);
-                }
-                Shape s = at.createTransformedShape(rect);
-                s = flipAT.createTransformedShape(s);
-                s = rotateAT.createTransformedShape(s);
-
-                g2d.setColor(Color.blue);
-                RectangleBox rectangleBox = new RectangleBox(false, (float) s.getBounds2D().getX(),
-                        (float) s.getBounds2D().getY(),
-                        (float) s.getBounds2D().getWidth(),
-                        (float) s.getBounds2D().getHeight(),
-                        1, singleWord, page);
-
-
-                RectangleBoxList.rectangleBoxList.add(rectangleBox);
-                g2d.draw(s);
-            }
-        } else {
-            TextPosition text = word.get(0);
-            AffineTransform at = text.getTextMatrix().createAffineTransform();
-            for (int i = 0; i < RectangleBoxList.rectangleBoxList.size(); i++) {
-                String singleWord = RectangleBoxList.rectangleBoxList.get(i).getWord();
-//                if (DataTypeValidators.isValidNIP(singleWord) ||
-//                        DataTypeValidators.isValidPesel(singleWord) ||
-//                        DataTypeValidators.isValidREGON(singleWord) ||
-//                        GenericValidator.isDate(singleWord, null) ||
-//                        singleWord.equals("PX031608")) {
-
-                if (true) {
-
-                    Rectangle2D.Float rect = new Rectangle2D.Float(RectangleBoxList.rectangleBoxList.get(i).getX(),
-                            RectangleBoxList.rectangleBoxList.get(i).getY(),
-                            RectangleBoxList.rectangleBoxList.get(i).getW(),
-                            RectangleBoxList.rectangleBoxList.get(i).getH());
-                    Shape s = at.createTransformedShape(rect);
-                    s = flipAT.createTransformedShape(s);
-                    s = rotateAT.createTransformedShape(s);
-
-                    g2d.setColor(Color.blue);
-                    log.info(s.toString());
-                    g2d.draw(s);
-
-                }
-            }
+        for (TextPosition letter : word) {
+            builder.append(letter.getUnicode());
+            xadvance += font.getWidth(letter.getCharacterCodes()[0]);
         }
+        String singleWord = builder.toString();
+        AffineTransform at = text.getTextMatrix().createAffineTransform();
+
+
+        // in blue:
+        Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f,
+                xadvance, bbox.getHeight() * 0.85f);
+        if (font instanceof PDType3Font) {
+            // bbox and font matrix are unscaled
+            at.concatenate(font.getFontMatrix().createAffineTransform());
+        } else {
+            // bbox and font matrix are already scaled to 1000
+            at.scale(1 / 1000f, 1 / 1000f);
+        }
+        Shape s = at.createTransformedShape(rect);
+        s = flipAT.createTransformedShape(s);
+        s = rotateAT.createTransformedShape(s);
+
+
+        RectangleBox rectangleBox = new RectangleBox(false, (float) s.getBounds2D().getX(),
+                (float) s.getBounds2D().getY(),
+                (float) s.getBounds2D().getWidth(),
+                (float) s.getBounds2D().getHeight(),
+                1, singleWord, page);
+
+
+        RectangleBoxLists.rectangleBoxList.add(rectangleBox);
+
+
+        g2d.setColor(Color.blue);
+        g2d.draw(s);
+
     }
 }

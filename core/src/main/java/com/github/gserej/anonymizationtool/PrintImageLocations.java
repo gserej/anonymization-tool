@@ -32,6 +32,7 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Service
 public class PrintImageLocations extends PDFStreamEngine {
     @Setter
     @Getter
@@ -48,6 +50,7 @@ public class PrintImageLocations extends PDFStreamEngine {
     @Setter
     @Getter
     private static float pageHeight;
+
 
     private PrintImageLocations() {
         addOperator(new Concatenate());
@@ -58,11 +61,13 @@ public class PrintImageLocations extends PDFStreamEngine {
         addOperator(new SetMatrix());
     }
 
+
+    // Takes PDF file, extracts images from it and calls TesseractOCR.imageFileOCR() on them
     static void imageLocations(File file) throws IOException {
 
         try (PDDocument document = PDDocument.load(file)) {
             PrintImageLocations printer = new PrintImageLocations();
-            new File("markedFiles/extractedImages").mkdir();
+            new File("markedFiles/extractedImages").mkdirs();
             pageNum = 1;
             for (PDPage page : document.getPages()) {
                 setPageNum(pageNum);
@@ -87,18 +92,13 @@ public class PrintImageLocations extends PDFStreamEngine {
                 File imgFile = new File("markedFiles/extractedImages/" + objectName.getName() + "-0" + ".png");
 
                 while (imgFile.exists()) {
-                    imgFile = new File("markedFiles/extractedImages/" + objectName.getName() + (num++) + "-0" + ".png");
+                    imgFile = new File("markedFiles/extractedImages/" + objectName.getName() + "-" + (num++) + ".png");
                 }
                 ImageIO.write(((PDImageXObject) xobject).getImage(), "png", imgFile);
 
                 Matrix ctmNew = getGraphicsState().getCurrentTransformationMatrix();
                 float imageXScale = ctmNew.getScalingFactorX();
                 float imageYScale = ctmNew.getScalingFactorY();
-
-                // position in user space units. 1 unit = 1/72 inch at 72 dpi
-//                log.info("position in PDF = " + ctmNew.getTranslateX() + ", " + ctmNew.getTranslateY() + " in user space units");
-                // displayed size in user space units
-//                log.info("displayed size  = " + imageXScale + ", " + imageYScale + " in user space units");
 
                 Map<String, Float> imagePositionAndSize = new HashMap<>();
                 imagePositionAndSize.put("Position X", ctmNew.getTranslateX());

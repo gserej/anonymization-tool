@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -16,25 +17,24 @@ import java.nio.file.Paths;
 
 @Slf4j
 @Service
-class CreatePdfFromImage {
+class CreatePdfFromSingleImage {
+
 
     private static Path rootLocation;
 
-    public CreatePdfFromImage(StorageProperties properties) {
+    @Autowired
+    public CreatePdfFromSingleImage(StorageProperties properties) {
         rootLocation = Paths.get(properties.getLocation());
     }
 
-    static String createPdfFromImage(File imageFile, String fileName) throws IOException {
-        new File(rootLocation + "/tmp").mkdir();
+
+    static String createPdfFromSingleImage(File imageFile, String fileName) throws IOException {
+        new File(rootLocation + "/tmp").mkdirs();
         String pdfPath = rootLocation + "/tmp/" + FilenameUtils.removeExtension(fileName) + ".pdf";
-//        log.info(fileName);
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage();
             doc.addPage(page);
 
-            // createFromFile is the easiest way with an image file
-            // if you already have the image in a BufferedImage,
-            // call LosslessFactory.createFromImage() instead
             PDImageXObject pdImage = PDImageXObject.createFromFile(imageFile.toString(), doc);
 
             try (PDPageContentStream contents = new PDPageContentStream(doc, page)) {

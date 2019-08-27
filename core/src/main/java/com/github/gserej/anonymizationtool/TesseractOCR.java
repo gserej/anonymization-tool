@@ -30,7 +30,8 @@ class TesseractOCR {
         TesseractOCR.ratio = ratio;
     }
 
-    static boolean imageFileOCR(File imageFile, boolean singleFile, Map imagePositionAndSize) {
+    // takes a imageFile, extracts words from it and adds rectangles to rectangleBoxList
+    static void imageFileOCR(File imageFile, boolean singleFile, Map imagePositionAndSize) {
 
 
         ITesseract instance = new Tesseract();  // JNA Interface Mapping
@@ -40,7 +41,7 @@ class TesseractOCR {
             instance.setDatapath(resourcePath); // path to tessdata directory
         } catch (FileNotFoundException e) {
             log.error(e.getMessage());
-            return false;
+            return;
         }
 
         BufferedImage bi;
@@ -62,9 +63,8 @@ class TesseractOCR {
                             ratio * (float) word.getBoundingBox().getWidth(),
                             ratio * (float) word.getBoundingBox().getHeight(),
                             1, word.getText(), 1);
-                    RectangleBoxList.rectangleBoxList.add(rectangleBox);
+                    RectangleBoxLists.rectangleBoxList.add(rectangleBox);
                 }
-                return true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -76,7 +76,7 @@ class TesseractOCR {
             float pageNum = (float) imagePositionAndSize.get("page");
             float pageHeight = (float) imagePositionAndSize.get("page Height");
 
-            log.info("pageNum: " + pageNum + "        posX: " + positionX + " posY: " + positionY + " sizeX: " + sizeX + " sizeY: " + sizeY);
+//            log.info("pageNum: " + pageNum + "        posX: " + positionX + " posY: " + positionY + " sizeX: " + sizeX + " sizeY: " + sizeY);
             try {
                 bi = ImageIO.read(imageFile);
                 int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
@@ -91,13 +91,11 @@ class TesseractOCR {
                             (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
                             (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
                             1, word.getText(), Math.round(pageNum));
-                    RectangleBoxList.rectangleBoxList.add(rectangleBox);
+                    RectangleBoxLists.rectangleBoxList.add(rectangleBox);
                 }
-                return true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        return false;
     }
 }

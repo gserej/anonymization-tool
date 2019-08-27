@@ -2,6 +2,8 @@ package com.github.gserej.anonymizationtool;
 
 import com.github.gserej.anonymizationtool.storage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.storage.StorageService;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -17,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,18 +31,21 @@ public class FileUploadController {
 
     private final StorageService storageService;
 
-    private static boolean ocrDone = false;
+    private static boolean singlePageOcrType = false;
     private static Object modelObject;
+    @Setter
+    @Getter
+    private static String tempName;
 
-    static boolean isOcrDone() {
-        return ocrDone;
+    static boolean isSinglePageOcrType() {
+        return singlePageOcrType;
     }
 
-    static Object getModelObject() {
+    private static Object getModelObject() {
         return modelObject;
     }
 
-    static void setModelObject(Object modelObject) {
+    private static void setModelObject(Object modelObject) {
         FileUploadController.modelObject = modelObject;
     }
 
@@ -51,7 +55,7 @@ public class FileUploadController {
     }
 
     @GetMapping("/")
-    public String listUploadedFiles(Model model) throws IOException {
+    public String listUploadedFiles(Model model) {
 
 
         model.addAttribute("files", storageService.loadAll().map(
@@ -88,41 +92,36 @@ public class FileUploadController {
         redirectAttributes.addFlashAttribute("message",
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
 
+
         File fileToProcess = storageService.loadAsFile(file.getOriginalFilename());
         try {
             String fileExtension = FilenameUtils.getExtension(fileToProcess.getName());
             if (fileExtension.equals("pdf")) {
                 log.info("pdf file found");
-                PrintDrawLocations.PrintDrawLocation(fileToProcess);
+                setTempName(file.getOriginalFilename());
+                PrintDrawLocations.PrintDrawLocation(fileToProcess, false);
                 PrintImageLocations.imageLocations(fileToProcess);
-                setModelObject(RectangleBoxList.getRectangleBoxList());
-                log.info(RectangleBoxList.getRectangleBoxList().toString());
+                setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
+                log.info(RectangleBoxLists.getRectangleBoxListParsed().toString());
 
             } else if (fileExtension.equals("jpg") || fileExtension.equals("png")) {
                 log.info("image file found");
-                String pathToImagePdfFile = CreatePdfFromImage.createPdfFromImage(fileToProcess, fileToProcess.getName());
 
+                String pathToImagePdfFile = CreatePdfFromSingleImage.createPdfFromSingleImage(fileToProcess, fileToProcess.getName());
 
                 File imagePdfFile = new File(pathToImagePdfFile);
-                FileInputStream input = new FileInputStream(imagePdfFile);
-//                log.info(imagePdfFile.getName());
                 MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
-                        imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(input));
+                        imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(new FileInputStream(imagePdfFile)));
                 storageService.store(multipartFile);
-                File loadedPdfFile = storageService.loadAsFile(multipartFile.getOriginalFilename());
+                setTempName(multipartFile.getOriginalFilename());
 
-                ocrDone = true;
+
                 Runnable r = () -> {
+                    singlePageOcrType = true;
                     TesseractOCR.imageFileOCR(fileToProcess, true, null);
-                    log.info("OCR status: done");
-                    try {
-                        PrintDrawLocations.PrintDrawLocation(loadedPdfFile);
-                        log.info("Processing imgPdfFile status: done");
-                        setModelObject(RectangleBoxList.getRectangleBoxList());
-                        log.info(RectangleBoxList.getRectangleBoxList().toString());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    log.info("OCR processing: done");
+                    setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
+
                 };
                 new Thread(r).start();
 
@@ -140,9 +139,19 @@ public class FileUploadController {
 
     @PostMapping(value = "/api")
     @ResponseBody
-    public String postJson(@RequestBody List<RectangleBox> rectangleBoxes, HttpServletRequest request) {
-        log.info(rectangleBoxes.toString());
-        return null;
+    public String postJson(@RequestBody List<RectangleBox> rectangleBoxesMarked) {
+        RectangleBoxLists.setRectangleBoxListMarked(rectangleBoxesMarked);
+        log.info(rectangleBoxesMarked.toString());
+
+        File fileToProcess = storageService.loadAsFile(getTempName());
+        try {
+            PrintDrawLocations.PrintDrawLocation(fileToProcess, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return "redirect:/";
     }
 
 
