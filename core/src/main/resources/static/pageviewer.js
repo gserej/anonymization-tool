@@ -109,11 +109,16 @@ $("#pdf-next").on('click', function () {
 });
 
 $("#draw2").on('click', function () {
+
+    var filteredRects = rects.filter(function (e) {
+        return e.marked === true
+    });
+    console.log(filteredRects);
     $.ajax({
         url: "/api",
         type: 'post',
         dataType: 'json',
-        data: JSON.stringify(rects),
+        data: JSON.stringify(filteredRects),
         contentType: 'application/json',
         success: function () {
             alert("success");
@@ -151,12 +156,6 @@ function removeRec(rectNum) {
     $("#pageContainer > div > div.canvasWrapper > canvas[id=rect" + rectNum + "]:first").remove();
 }
 
-// var rects = [{id: 0, marked: false, x: 10, y: 10, w: 50, h: 20},
-//     {id: 1, marked: false, x: 75, y: 75, w: 50, h: 20},
-//     {id: 2, marked: false, x: 150, y: 150, w: 40, h: 20},
-//     {id: 3, marked: false, x: 700, y: 700, w: 50, h: 50}
-// ];
-
 var rects = [];
 for (var o in rectListJS) {
     rects.push(rectListJS[o]);
@@ -170,7 +169,7 @@ $("#draw").on('click', function () {
     function drawAllRed() {
         for (var i = 0, len = rects.length; i < len; i++) {
             if (rects[i].page === PAGE_TO_VIEW) {
-                drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, rects[i].id);
+                drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
             }
         }
     }
@@ -207,7 +206,7 @@ $("#draw").on('click', function () {
         $('.textLayer').hide();
         if (collides(rects, e.pageX - BBoffsetX, e.pageY - BBoffsetY)) {
             console.log("RecNum " + rectNum);
-            if (rectNum >= 0) {
+            if (rectNum !== -1) {
                 if (rects[rectNum].marked === false) {
                     rects[rectNum].marked = true;
                     removeRec(rectNum);
