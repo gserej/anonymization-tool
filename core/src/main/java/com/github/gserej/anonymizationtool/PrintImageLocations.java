@@ -95,9 +95,6 @@ public class PrintImageLocations extends PDFStreamEngine {
             COSName objectName = (COSName) operands.get(0);
             PDXObject xobject = getResources().getXObject(objectName);
             if (xobject instanceof PDImageXObject) {
-
-                log.info("Found image [" + objectName.getName() + "]");
-
                 int num = 0;
                 File imgFile = new File(rootLocation + "/extractedImages/" + objectName.getName() + "-0" + ".png");
 

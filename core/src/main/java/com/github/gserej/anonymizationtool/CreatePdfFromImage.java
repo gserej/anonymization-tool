@@ -26,24 +26,42 @@ class CreatePdfFromImage {
         rootLocation = Paths.get(properties.getLocation());
     }
 
-    // creates a pdf file from a image
+    // creates a Pdf file from a image
     static String createPdfFromSingleImage(File imageFile, String fileName) throws IOException {
         new File(rootLocation + "/tempPdfLocation").mkdirs();
-        String pdfPath = rootLocation + "/tempPdfLocation/" + FilenameUtils.removeExtension(fileName) + ".pdf";
+
         try (PDDocument doc = new PDDocument()) {
-            createPdfPage(doc, imageFile);
+            PDPage page = new PDPage();
+            doc.addPage(page);
+            PDImageXObject pdImage = PDImageXObject.createFromFile(imageFile.toString(), doc);
+            try (PDPageContentStream contents = new PDPageContentStream(doc, page)) {
+                float width = pdImage.getWidth();
+                float height = pdImage.getHeight();
+                float widthRatio = page.getCropBox().getWidth() / width;
+                float heightRatio = page.getCropBox().getHeight() / height;
+                float ratio = Math.min(widthRatio, heightRatio);
+                TesseractOCR.setRatio(ratio);
+                contents.drawImage(pdImage, page.getCropBox().getWidth() - ratio * width, page.getCropBox().getHeight() - ratio * height, ratio * width, ratio * height);
+            }
+            String pdfPath = rootLocation + "/tempPdfLocation/" + FilenameUtils.removeExtension(fileName) + ".pdf";
             doc.save(pdfPath);
             return pdfPath;
         }
     }
 
-    static String createPdfFromMultipleImages(List<File> imageFiles, String fileName) throws IOException {
+    static String createPdfFromMultipleImages(List<File> imageFiles, String fileName, File originalDocument) throws IOException {
         new File(rootLocation + "/processedPdf").mkdirs();
 
-        try (PDDocument doc = new PDDocument()) {
-            for (File imageFile : imageFiles) {
-                createPdfPage(doc, imageFile);
+        try (PDDocument doc = PDDocument.load(originalDocument)) {
 
+            int i = 0;
+            for (File imageFile : imageFiles) {
+                PDPage page = doc.getPage(i);
+                PDImageXObject pdImage = PDImageXObject.createFromFile(imageFile.toString(), doc);
+                try (PDPageContentStream contents = new PDPageContentStream(doc, page)) {
+                    contents.drawImage(pdImage, 0, 0, page.getCropBox().getWidth(), page.getCropBox().getHeight());
+                }
+                i++;
             }
             String pdfPath = rootLocation + "/processedPdf/" + FilenameUtils.removeExtension(fileName) + ".pdf";
             doc.save(pdfPath);
@@ -51,18 +69,4 @@ class CreatePdfFromImage {
         }
     }
 
-    private static void createPdfPage(PDDocument doc, File imageFile) throws IOException {
-        PDPage page = new PDPage();
-        doc.addPage(page);
-        PDImageXObject pdImage = PDImageXObject.createFromFile(imageFile.toString(), doc);
-        try (PDPageContentStream contents = new PDPageContentStream(doc, page)) {
-            float width = pdImage.getWidth();
-            float height = pdImage.getHeight();
-            float widthRatio = page.getCropBox().getWidth() / width;
-            float heightRatio = page.getCropBox().getHeight() / height;
-            float ratio = Math.min(widthRatio, heightRatio);
-            TesseractOCR.setRatio(ratio);
-            contents.drawImage(pdImage, page.getCropBox().getWidth() - ratio * width, page.getCropBox().getHeight() - ratio * height, ratio * width, ratio * height);
-        }
-    }
 }

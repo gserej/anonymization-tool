@@ -16,6 +16,7 @@
  */
 package com.github.gserej.anonymizationtool;
 
+import com.github.gserej.anonymizationtool.storage.StorageProperties;
 import com.github.gserej.anonymizationtool.storage.StorageService;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,8 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -37,25 +40,23 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@Service
 public class PrintDrawLocations extends PDFTextStripper {
-    private static final int SCALE = 5;
+    private static final int SCALE = 8;
 
     private static List<String> tempImagesList = new ArrayList<>();
-    private final String filename;
-
-    private final PDDocument document;
+    private static String filename;
+    private static PDDocument document;
     private AffineTransform flipAT;
     private AffineTransform rotateAT;
     private Graphics2D g2d;
-
-    @Setter
-    private static String rootLocation;
-
-    @Setter
+    private static Path rootLocation;
     private static StorageService storageService;
 
     @Setter
@@ -66,18 +67,21 @@ public class PrintDrawLocations extends PDFTextStripper {
     @Setter
     private boolean readyToDraw;
 
+    @Autowired
+    public PrintDrawLocations(StorageProperties properties, StorageService storageService) throws IOException {
+        rootLocation = Paths.get(properties.getLocation());
+        PrintDrawLocations.storageService = storageService;
+    }
 
     private PrintDrawLocations(PDDocument document, String filename, boolean readyToDraw) throws IOException {
-        this.document = document;
-        this.filename = filename;
+        PrintDrawLocations.document = document;
+        PrintDrawLocations.filename = filename;
         this.readyToDraw = readyToDraw;
     }
 
 
-    static void PrintDrawLocation(File file, boolean readyToDraw) throws IOException {
-
+    static void printDrawLocation(File file, boolean readyToDraw) throws IOException {
         try (PDDocument document = PDDocument.load(file)) {
-
             PrintDrawLocations stripper = new PrintDrawLocations(document, file.getName(), readyToDraw);
             stripper.setSortByPosition(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
@@ -85,12 +89,9 @@ public class PrintDrawLocations extends PDFTextStripper {
                 stripper.stripPage(page);
             }
             FileUploadController.setTempImagesList(tempImagesList);
-
         } catch (NullPointerException e) {
             e.printStackTrace();
         }
-
-
     }
 
     private void stripPage(int page) throws IOException {
@@ -137,42 +138,37 @@ public class PrintDrawLocations extends PDFTextStripper {
         writeText(document, dummy);
 
         if (readyToDraw) {
-            drawWordImage();
+            drawWordImage(page + 1);
         }
-
-        g2d.dispose();
-
-        String imageFilename = filename;
-        int pt = imageFilename.lastIndexOf('.');
-        imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
-
         if (readyToDraw) {
-            new File("/tmpImages/" + imageFilename).mkdirs();
-            File file = new File("/tmpImages/" + imageFilename);
+            String imageFilename = filename;
+            int pt = imageFilename.lastIndexOf('.');
+            imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
+            new File(rootLocation + "/tempImages/" + imageFilename).mkdirs();
+            File file = new File(rootLocation + "/tempImages/" + imageFilename);
             ImageIO.write(image, "png", file);
 
             tempImagesList.add(file.getName());
-
             storageService.storeAsFile(file);
-
         }
+        g2d.dispose();
     }
 
-    private void drawWordImage() {
+    private void drawWordImage(int page) {
         Matrix matrix = new Matrix();
         AffineTransform at = matrix.createAffineTransform();
         for (int i = 0; i < RectangleBoxLists.rectangleBoxListMarked.size(); i++) {
-            Rectangle2D.Float rect = new Rectangle2D.Float(RectangleBoxLists.rectangleBoxListMarked.get(i).getX(),
-                    RectangleBoxLists.rectangleBoxListMarked.get(i).getY(),
-                    RectangleBoxLists.rectangleBoxListMarked.get(i).getW(),
-                    RectangleBoxLists.rectangleBoxListMarked.get(i).getH());
+            if (RectangleBoxLists.rectangleBoxListMarked.get(i).getPage() == page) {
+                Rectangle2D.Float rect = new Rectangle2D.Float(RectangleBoxLists.rectangleBoxListMarked.get(i).getX(),
+                        RectangleBoxLists.rectangleBoxListMarked.get(i).getY(),
+                        RectangleBoxLists.rectangleBoxListMarked.get(i).getW(),
+                        RectangleBoxLists.rectangleBoxListMarked.get(i).getH());
 
-
-            Shape s = at.createTransformedShape(rect);
-            s = rotateAT.createTransformedShape(s);
-            g2d.setColor(Color.black);
-            g2d.fill(s);
-
+                Shape s = at.createTransformedShape(rect);
+                s = rotateAT.createTransformedShape(s);
+                g2d.setColor(Color.black);
+                g2d.fill(s);
+            }
         }
     }
 

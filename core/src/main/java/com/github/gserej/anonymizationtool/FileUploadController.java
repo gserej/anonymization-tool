@@ -80,8 +80,6 @@ public class FileUploadController {
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
                                    RedirectAttributes redirectAttributes) {
-
-        PrintDrawLocations.setStorageService(storageService);
         storageService.store(file);
         redirectAttributes.addFlashAttribute("message",
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
@@ -89,29 +87,40 @@ public class FileUploadController {
         File fileToProcess = storageService.loadAsFile(file.getOriginalFilename());
         try {
             String fileExtension = FilenameUtils.getExtension(fileToProcess.getName());
-            if (fileExtension.equals("pdf")) {
+            if (fileExtension.equalsIgnoreCase("pdf")) {
                 log.info("pdf file found");
                 setTempName(file.getOriginalFilename());
-                PrintDrawLocations.PrintDrawLocation(fileToProcess, false);
-                PrintImageLocations.imageLocations(fileToProcess);
+                PrintDrawLocations.printDrawLocation(fileToProcess, false);
                 setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
-                log.info(RectangleBoxLists.getRectangleBoxListParsed().toString());
+                log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
 
-            } else if (fileExtension.equals("jpg") || fileExtension.equals("png")) {
+                Runnable r = () -> {
+                    try {
+                        PrintImageLocations.imageLocations(fileToProcess);
+                        setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
+                        log.info("Additional rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                };
+                new Thread(r).start();
+
+            } else if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("png")) {
                 log.info("image file found");
 
                 String pathToImagePdfFile = CreatePdfFromImage.createPdfFromSingleImage(fileToProcess, fileToProcess.getName());
-
                 File imagePdfFile = new File(pathToImagePdfFile);
                 MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
                         imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(new FileInputStream(imagePdfFile)));
                 storageService.store(multipartFile);
+                imagePdfFile.delete();
                 setTempName(multipartFile.getOriginalFilename());
 
                 Runnable r = () -> {
                     TesseractOCR.imageFileOCR(fileToProcess, true, null);
                     log.info("OCR processing: done");
                     setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
+                    log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
                 };
                 new Thread(r).start();
 
@@ -130,24 +139,24 @@ public class FileUploadController {
     @ResponseBody
     public String postJson(@RequestBody List<RectangleBox> rectangleBoxesMarked) {
         RectangleBoxLists.setRectangleBoxListMarked(rectangleBoxesMarked);
-        log.info(rectangleBoxesMarked.toString());
+        log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
 
         File fileToProcess = storageService.loadAsFile(getTempName());
+
+        log.info(fileToProcess.getName());
         try {
-            PrintDrawLocations.PrintDrawLocation(fileToProcess, true);
+            PrintDrawLocations.printDrawLocation(fileToProcess, true);
             log.info(tempImagesList.toString());
             List<File> imageFilesList = new ArrayList<>();
-            String processedImageFileName = null;
             for (String s : tempImagesList) {
-                File processedImageFile = storageService.loadAsFile(s);
-                processedImageFileName = processedImageFile.getName();
-                imageFilesList.add(processedImageFile);
+                imageFilesList.add(storageService.loadAsFile(s));
             }
-
-            String pathToDonePdf = CreatePdfFromImage.createPdfFromMultipleImages(imageFilesList, processedImageFileName);
+            String pathToDonePdf = CreatePdfFromImage.createPdfFromMultipleImages(imageFilesList, getTempName(), fileToProcess);
+            setTempName(null);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
 
         return "redirect:/";
     }

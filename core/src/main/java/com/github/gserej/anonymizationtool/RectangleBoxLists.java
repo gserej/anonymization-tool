@@ -1,4 +1,5 @@
 package com.github.gserej.anonymizationtool;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,10 @@ class RectangleBoxLists {
                     word.equals("PX031608") ||
                     word.equals("Lorem") ||
                     word.equals("000100700006176")) {
-                rectangleBoxListParsed.add(rectangleBox);
+
+                if (!rectangleBoxListParsed.contains(rectangleBox)) {
+                    rectangleBoxListParsed.add(rectangleBox);
+                }
             }
 
         }
