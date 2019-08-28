@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -50,6 +51,18 @@ public class FileSystemStorageService implements StorageService {
         }
     }
 
+
+    @Override
+    public void storeAsFile(File file) {
+        String filename = file.getName();
+        try {
+            Files.copy(new FileInputStream(file), this.rootLocation.resolve(filename),
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new StorageException("Failed to store file " + filename, e);
+        }
+    }
+
     @Override
     public Stream<Path> loadAll() {
         try {
@@ -68,6 +81,7 @@ public class FileSystemStorageService implements StorageService {
     }
 
 
+    @Override
     public File loadAsFile(String filename) {
         Path file = rootLocation.resolve(filename);
         return file.toFile();

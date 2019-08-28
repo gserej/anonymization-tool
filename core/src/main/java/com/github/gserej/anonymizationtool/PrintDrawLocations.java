@@ -16,6 +16,7 @@
  */
 package com.github.gserej.anonymizationtool;
 
+import com.github.gserej.anonymizationtool.storage.StorageService;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,12 +44,19 @@ import java.util.List;
 public class PrintDrawLocations extends PDFTextStripper {
     private static final int SCALE = 5;
 
-
+    private static List<String> tempImagesList = new ArrayList<>();
     private final String filename;
+
     private final PDDocument document;
     private AffineTransform flipAT;
     private AffineTransform rotateAT;
     private Graphics2D g2d;
+
+    @Setter
+    private static String rootLocation;
+
+    @Setter
+    private static StorageService storageService;
 
     @Setter
     @Getter
@@ -76,10 +84,12 @@ public class PrintDrawLocations extends PDFTextStripper {
                 setPageNumber(page + 1);
                 stripper.stripPage(page);
             }
+            FileUploadController.setTempImagesList(tempImagesList);
 
         } catch (NullPointerException e) {
             e.printStackTrace();
         }
+
 
     }
 
@@ -126,23 +136,29 @@ public class PrintDrawLocations extends PDFTextStripper {
         Writer dummy = new OutputStreamWriter(new ByteArrayOutputStream());
         writeText(document, dummy);
 
-        if (FileUploadController.isSinglePageOcrType()) {
+        if (readyToDraw) {
             drawWordImage();
         }
 
         g2d.dispose();
 
-        String imageFilename = "test.png";
+        String imageFilename = filename;
         int pt = imageFilename.lastIndexOf('.');
         imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
 
         if (readyToDraw) {
-            ImageIO.write(image, "png", new File("markedFiles/" + imageFilename));
+            new File("/tmpImages/" + imageFilename).mkdirs();
+            File file = new File("/tmpImages/" + imageFilename);
+            ImageIO.write(image, "png", file);
+
+            tempImagesList.add(file.getName());
+
+            storageService.storeAsFile(file);
+
         }
     }
 
     private void drawWordImage() {
-
         Matrix matrix = new Matrix();
         AffineTransform at = matrix.createAffineTransform();
         for (int i = 0; i < RectangleBoxLists.rectangleBoxListMarked.size(); i++) {
@@ -151,7 +167,6 @@ public class PrintDrawLocations extends PDFTextStripper {
                     RectangleBoxLists.rectangleBoxListMarked.get(i).getW(),
                     RectangleBoxLists.rectangleBoxListMarked.get(i).getH());
 
-            log.info(RectangleBoxLists.getRectangleBoxListParsed().get(i).getWord());
 
             Shape s = at.createTransformedShape(rect);
             s = rotateAT.createTransformedShape(s);
@@ -182,7 +197,6 @@ public class PrintDrawLocations extends PDFTextStripper {
             word.clear();
         }
     }
-
 
     private void printWord(List<TextPosition> word, int page) throws IOException {
         StringBuilder builder = new StringBuilder();
@@ -223,10 +237,6 @@ public class PrintDrawLocations extends PDFTextStripper {
 
 
         RectangleBoxLists.rectangleBoxList.add(rectangleBox);
-
-
-        g2d.setColor(Color.blue);
-        g2d.draw(s);
 
     }
 }

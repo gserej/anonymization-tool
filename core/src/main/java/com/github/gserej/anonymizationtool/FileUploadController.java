@@ -22,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,23 +32,17 @@ public class FileUploadController {
 
     private final StorageService storageService;
 
-    private static boolean singlePageOcrType = false;
+    @Setter
+    @Getter
     private static Object modelObject;
+
     @Setter
     @Getter
     private static String tempName;
 
-    static boolean isSinglePageOcrType() {
-        return singlePageOcrType;
-    }
-
-    private static Object getModelObject() {
-        return modelObject;
-    }
-
-    private static void setModelObject(Object modelObject) {
-        FileUploadController.modelObject = modelObject;
-    }
+    @Getter
+    @Setter
+    private static List<String> tempImagesList;
 
     @Autowired
     public FileUploadController(StorageService storageService) {
@@ -56,7 +51,6 @@ public class FileUploadController {
 
     @GetMapping("/")
     public String listUploadedFiles(Model model) {
-
 
         model.addAttribute("files", storageService.loadAll().map(
                 path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
@@ -83,15 +77,14 @@ public class FileUploadController {
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
     }
 
-
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
                                    RedirectAttributes redirectAttributes) {
 
+        PrintDrawLocations.setStorageService(storageService);
         storageService.store(file);
         redirectAttributes.addFlashAttribute("message",
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
-
 
         File fileToProcess = storageService.loadAsFile(file.getOriginalFilename());
         try {
@@ -107,7 +100,7 @@ public class FileUploadController {
             } else if (fileExtension.equals("jpg") || fileExtension.equals("png")) {
                 log.info("image file found");
 
-                String pathToImagePdfFile = CreatePdfFromSingleImage.createPdfFromSingleImage(fileToProcess, fileToProcess.getName());
+                String pathToImagePdfFile = CreatePdfFromImage.createPdfFromSingleImage(fileToProcess, fileToProcess.getName());
 
                 File imagePdfFile = new File(pathToImagePdfFile);
                 MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
@@ -115,16 +108,12 @@ public class FileUploadController {
                 storageService.store(multipartFile);
                 setTempName(multipartFile.getOriginalFilename());
 
-
                 Runnable r = () -> {
-                    singlePageOcrType = true;
                     TesseractOCR.imageFileOCR(fileToProcess, true, null);
                     log.info("OCR processing: done");
                     setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
-
                 };
                 new Thread(r).start();
-
 
             } else {
                 redirectAttributes.addFlashAttribute("message", "You uploaded the file with a wrong file extension.");
@@ -146,14 +135,22 @@ public class FileUploadController {
         File fileToProcess = storageService.loadAsFile(getTempName());
         try {
             PrintDrawLocations.PrintDrawLocation(fileToProcess, true);
+            log.info(tempImagesList.toString());
+            List<File> imageFilesList = new ArrayList<>();
+            String processedImageFileName = null;
+            for (String s : tempImagesList) {
+                File processedImageFile = storageService.loadAsFile(s);
+                processedImageFileName = processedImageFile.getName();
+                imageFilesList.add(processedImageFile);
+            }
+
+            String pathToDonePdf = CreatePdfFromImage.createPdfFromMultipleImages(imageFilesList, processedImageFileName);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-
         return "redirect:/";
     }
-
 
     @ExceptionHandler(StorageFileNotFoundException.class)
     public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {

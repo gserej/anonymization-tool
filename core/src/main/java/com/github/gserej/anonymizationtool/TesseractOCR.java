@@ -1,5 +1,7 @@
 package com.github.gserej.anonymizationtool;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.ITesseract;
@@ -20,19 +22,12 @@ import java.util.Map;
 @Service
 class TesseractOCR {
 
+    @Getter
+    @Setter
     private static float ratio = 1;
-
-    public static float getRatio() {
-        return ratio;
-    }
-
-    public static void setRatio(float ratio) {
-        TesseractOCR.ratio = ratio;
-    }
 
     // takes a imageFile, extracts words from it and adds rectangles to rectangleBoxList
     static void imageFileOCR(File imageFile, boolean singleFile, Map imagePositionAndSize) {
-
 
         ITesseract instance = new Tesseract();  // JNA Interface Mapping
         // ITesseract instance = new Tesseract1(); // JNA Direct Mapping
@@ -54,9 +49,6 @@ class TesseractOCR {
                 List<Word> wordList = instance.getWords(bi, level);
 
                 for (Word word : wordList) {
-//                log.info(word.getText());
-//                log.info(word.getBoundingBox().toString());
-
                     RectangleBox rectangleBox = new RectangleBox(false,
                             ratio * (float) word.getBoundingBox().getX(),
                             ratio * (float) word.getBoundingBox().getY(),
@@ -75,16 +67,12 @@ class TesseractOCR {
             float sizeY = (float) imagePositionAndSize.get("Size Y");
             float pageNum = (float) imagePositionAndSize.get("page");
             float pageHeight = (float) imagePositionAndSize.get("page Height");
-
-//            log.info("pageNum: " + pageNum + "        posX: " + positionX + " posY: " + positionY + " sizeX: " + sizeX + " sizeY: " + sizeY);
             try {
                 bi = ImageIO.read(imageFile);
                 int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
                 List<Word> wordList = instance.getWords(bi, level);
 
                 for (Word word : wordList) {
-//                log.info(word.getText());
-//                log.info(word.getBoundingBox().toString());
                     RectangleBox rectangleBox = new RectangleBox(false,
                             positionX + (float) word.getBoundingBox().getX() * sizeX / bi.getWidth(),
                             -positionY + pageHeight - sizeY + (float) word.getBoundingBox().getY() * sizeY / bi.getHeight(),

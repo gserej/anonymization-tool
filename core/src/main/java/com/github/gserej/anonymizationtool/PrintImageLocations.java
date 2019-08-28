@@ -16,6 +16,7 @@
  */
 package com.github.gserej.anonymizationtool;
 
+import com.github.gserej.anonymizationtool.storage.StorageProperties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +33,14 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +55,12 @@ public class PrintImageLocations extends PDFStreamEngine {
     @Getter
     private static float pageHeight;
 
+    private static Path rootLocation;
+
+    @Autowired
+    public PrintImageLocations(StorageProperties properties) {
+        rootLocation = Paths.get(properties.getLocation());
+    }
 
     private PrintImageLocations() {
         addOperator(new Concatenate());
@@ -67,7 +77,7 @@ public class PrintImageLocations extends PDFStreamEngine {
 
         try (PDDocument document = PDDocument.load(file)) {
             PrintImageLocations printer = new PrintImageLocations();
-            new File("markedFiles/extractedImages").mkdirs();
+            new File(rootLocation + "/extractedImages").mkdirs();
             pageNum = 1;
             for (PDPage page : document.getPages()) {
                 setPageNum(pageNum);
@@ -89,10 +99,10 @@ public class PrintImageLocations extends PDFStreamEngine {
                 log.info("Found image [" + objectName.getName() + "]");
 
                 int num = 0;
-                File imgFile = new File("markedFiles/extractedImages/" + objectName.getName() + "-0" + ".png");
+                File imgFile = new File(rootLocation + "/extractedImages/" + objectName.getName() + "-0" + ".png");
 
                 while (imgFile.exists()) {
-                    imgFile = new File("markedFiles/extractedImages/" + objectName.getName() + "-" + (num++) + ".png");
+                    imgFile = new File(rootLocation + "/extractedImages/" + objectName.getName() + "-" + (num++) + ".png");
                 }
                 ImageIO.write(((PDImageXObject) xobject).getImage(), "png", imgFile);
 

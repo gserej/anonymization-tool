@@ -23,4 +23,6 @@ public interface StorageService {
 
     File loadAsFile(String filename);
 
+    void storeAsFile(File file);
+
 }
