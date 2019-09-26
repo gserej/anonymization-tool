@@ -1,13 +1,13 @@
-package com.github.gserej.anonymizationtool;
+package com.github.gserej.anonymizationtool.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 
 @Service
-public class DataTypeValidators {
+public class NumberTypeValidators {
 
-    static boolean isValidPesel(String pesel) {
+    public static boolean isValidPesel(String pesel) {
         pesel = pesel.trim();
         if (pesel.length() != 11) return false;
         if (!StringUtils.isNumeric(pesel)) {
@@ -23,7 +23,6 @@ public class DataTypeValidators {
         }
         int checksum = Integer.parseInt(pesel.substring(10, 11));
 
-
         sum %= 10;
         sum = 10 - sum;
         sum %= 10;
@@ -31,7 +30,7 @@ public class DataTypeValidators {
         return (sum == checksum);
     }
 
-    static boolean isValidNIP(String nip) {
+    public static boolean isValidNIP(String nip) {
         int nsize = nip.length();
         if (nsize != 10) {
             return false;
@@ -40,7 +39,7 @@ public class DataTypeValidators {
             return false;
         }
         int[] weights = {6, 5, 7, 2, 3, 4, 5, 6, 7};
-        int j = 0, sum = 0, control = 0;
+        int j, sum = 0, control;
         int csum = Integer.parseInt(nip.substring(nsize - 1));
         for (int i = 0; i < nsize - 1; i++) {
             char c = nip.charAt(i);
@@ -52,8 +51,7 @@ public class DataTypeValidators {
 
     }
 
-
-    static boolean isValidREGON(String regon) {
+    public static boolean isValidREGON(String regon) {
 
         int rsize = regon.length();
         if (!((rsize == 9) || (rsize == 14))) {
@@ -70,7 +68,7 @@ public class DataTypeValidators {
             weights = weights14;
         }
 
-        int j = 0, sum = 0, control = 0;
+        int j, sum = 0, control;
         int csum = Integer.parseInt(regon.substring(rsize - 1));
         for (int i = 0; i < rsize - 1; i++) {
             char c = regon.charAt(i);
@@ -84,5 +82,4 @@ public class DataTypeValidators {
         }
         return (control == csum);
     }
-
 }

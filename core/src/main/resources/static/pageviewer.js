@@ -36,6 +36,9 @@ var SCALE_FIXED = SCALE / 0.75;
 var number_of_pages;
 
 var container = document.getElementById('pageContainer');
+var pdf_prev = $("#pdf-prev");
+var pdf_next = $("#pdf-next");
+
 
 var loadingTask = pdfjsLib.getDocument({
     url: DEFAULT_URL,
@@ -43,7 +46,18 @@ var loadingTask = pdfjsLib.getDocument({
     cMapPacked: CMAP_PACKED
 });
 $("#pdf-meta").hide();
+$("#data-types").hide();
 
+$(document).ready(
+    function () {
+        $('input:file').change(
+            function () {
+                if ($(this).val()) {
+                    $('input:submit').attr('disabled', false);
+                }
+            }
+        );
+    });
 
 function render() {
     $(".page").remove();
@@ -62,11 +76,13 @@ function render() {
             });
             pdfPageView.setPdfPage(pdfPage);
             $("#upload-form").hide();
+            $("#welcome-screen").hide();
             $("#pdf-meta").show();
+            $("#data-types").show();
             if (PAGE_TO_VIEW === number_of_pages) {
-                $("#pdf-next").prop("disabled", true);
+                pdf_next.prop("disabled", true);
             } else {
-                $("#pdf-next").prop("disabled", false);
+                pdf_next.prop("disabled", false);
             }
 
 
@@ -75,24 +91,24 @@ function render() {
     });
 }
 
-render();
-$("#pdf-prev").prop("disabled", true);
 
-// $("#pdf-draw2").prop("disabled", true);
+render();
+pdf_prev.prop("disabled", true);
+
 function disableEnablePrevNext() {
     if (PAGE_TO_VIEW === 1) {
-        $("#pdf-prev").prop("disabled", true);
+        pdf_prev.prop("disabled", true);
     } else {
-        $("#pdf-prev").prop("disabled", false);
+        pdf_prev.prop("disabled", false);
     }
     if (PAGE_TO_VIEW === number_of_pages) {
-        $("#pdf-next").prop("disabled", true);
+        pdf_next.prop("disabled", true);
     } else {
-        $("#pdf-next").prop("disabled", false);
+        pdf_next.prop("disabled", false);
     }
 }
 
-$("#pdf-prev").on('click', function () {
+pdf_prev.on('click', function () {
     if (PAGE_TO_VIEW !== 1) {
         PAGE_TO_VIEW--;
         render();
@@ -100,7 +116,7 @@ $("#pdf-prev").on('click', function () {
     }
 });
 
-$("#pdf-next").on('click', function () {
+pdf_next.on('click', function () {
     if (PAGE_TO_VIEW !== number_of_pages) {
         PAGE_TO_VIEW++;
         render();
@@ -108,7 +124,7 @@ $("#pdf-next").on('click', function () {
     }
 });
 
-$("#draw2").on('click', function () {
+$("#do-refactor").on('click', function () {
 
     var filteredRects = rects.filter(function (e) {
         return e.marked === true
@@ -117,12 +133,8 @@ $("#draw2").on('click', function () {
     $.ajax({
         url: "/api",
         type: 'post',
-        dataType: 'json',
         data: JSON.stringify(filteredRects),
         contentType: 'application/json',
-        success: function () {
-            alert("success");
-        },
         error: function () {
             alert('error');
         }

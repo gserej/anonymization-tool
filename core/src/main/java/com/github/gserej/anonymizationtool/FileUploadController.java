@@ -1,5 +1,4 @@
 package com.github.gserej.anonymizationtool;
-
 import com.github.gserej.anonymizationtool.storage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.storage.StorageService;
 import lombok.Getter;
@@ -62,7 +61,6 @@ public class FileUploadController {
         return "pageviewer";
     }
 
-
     @ModelAttribute("rectListModel")
     private Object rectListModel() {
         return getModelObject();
@@ -85,78 +83,92 @@ public class FileUploadController {
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
 
         File fileToProcess = storageService.loadAsFile(file.getOriginalFilename());
-        try {
-            String fileExtension = FilenameUtils.getExtension(fileToProcess.getName());
-            if (fileExtension.equalsIgnoreCase("pdf")) {
-                log.info("pdf file found");
-                setTempName(file.getOriginalFilename());
-                PrintDrawLocations.printDrawLocation(fileToProcess, false);
-                setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
-                log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+        String fileExtension = FilenameUtils.getExtension(fileToProcess.getName());
 
-                Runnable r = () -> {
-                    try {
-                        PrintImageLocations.imageLocations(fileToProcess);
-                        setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
-                        log.info("Additional rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                };
-                new Thread(r).start();
+        if (fileExtension.equalsIgnoreCase("pdf")) {
+            log.info("pdf file found");
 
-            } else if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("png")) {
-                log.info("image file found");
-
-                String pathToImagePdfFile = CreatePdfFromImage.createPdfFromSingleImage(fileToProcess, fileToProcess.getName());
-                File imagePdfFile = new File(pathToImagePdfFile);
-                MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
-                        imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(new FileInputStream(imagePdfFile)));
-                storageService.store(multipartFile);
-                imagePdfFile.delete();
-                setTempName(multipartFile.getOriginalFilename());
-
-                Runnable r = () -> {
-                    TesseractOCR.imageFileOCR(fileToProcess, true, null);
-                    log.info("OCR processing: done");
-                    setModelObject(RectangleBoxLists.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxList()));
-                    log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
-                };
-                new Thread(r).start();
-
-            } else {
-                redirectAttributes.addFlashAttribute("message", "You uploaded the file with a wrong file extension.");
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            processPdfFile(fileToProcess, file);
+        } else if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("png")) {
+            log.info("image file found");
+            processImageFile(fileToProcess);
+        } else {
+            redirectAttributes.addFlashAttribute("message", "You uploaded the file with a wrong file extension.");
         }
-
         return "redirect:/";
     }
 
+    private void processPdfFile(File fileToProcess, MultipartFile file) {
+
+        setTempName(file.getOriginalFilename());
+        try {
+            PrintDrawLocations.printDrawLocation(fileToProcess, false);
+            setModelObject(RectangleParsers.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
+            log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+
+            Runnable r = () -> {
+                try {
+                    PrintImageLocations.imageLocations(fileToProcess);
+                    setModelObject(RectangleParsers.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
+                    log.info("Additional rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            };
+            new Thread(r).start();
+
+        } catch (IOException e) {
+            log.error("Error: " + e);
+        }
+    }
+
+    private void processImageFile(File fileToProcess) {
+        try {
+            File imagePdfFile = ImageToPdfConversion.createPdfFromSingleImage(fileToProcess, fileToProcess.getName());
+            MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
+                    imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(new FileInputStream(imagePdfFile)));
+            storageService.store(multipartFile);
+
+            setTempName(multipartFile.getOriginalFilename());
+            Runnable r = () -> {
+                TesseractOCR.doOcrOnSingleFile(fileToProcess, Ratio.getRatio());
+                log.info("OCR processing: done");
+                setModelObject(RectangleParsers.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
+                log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+            };
+            new Thread(r).start();
+
+        } catch (IOException e) {
+            log.error("Error: " + e);
+        }
+    }
+
     @PostMapping(value = "/api")
-    @ResponseBody
-    public String postJson(@RequestBody List<RectangleBox> rectangleBoxesMarked) {
+    public String postJson(@RequestBody List<RectangleBox> rectangleBoxesMarked, RedirectAttributes redirectAttributes) {
         RectangleBoxLists.setRectangleBoxListMarked(rectangleBoxesMarked);
         log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
 
         File fileToProcess = storageService.loadAsFile(getTempName());
-
         log.info(fileToProcess.getName());
+
         try {
             PrintDrawLocations.printDrawLocation(fileToProcess, true);
+
             log.info(tempImagesList.toString());
             List<File> imageFilesList = new ArrayList<>();
             for (String s : tempImagesList) {
                 imageFilesList.add(storageService.loadAsFile(s));
             }
-            String pathToDonePdf = CreatePdfFromImage.createPdfFromMultipleImages(imageFilesList, getTempName(), fileToProcess);
+
+            String pathToDonePdf = ImageToPdfConversion.createPdfFromMultipleImages(imageFilesList, getTempName(), fileToProcess);
+            storageService.storeAsFile(new File(pathToDonePdf));
             setTempName(null);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        redirectAttributes.addFlashAttribute("processedFileReadyMessage",
+                "Your file was converted, click the link below to download it.");
 
         return "redirect:/";
     }

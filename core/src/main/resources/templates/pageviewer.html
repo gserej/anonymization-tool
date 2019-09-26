@@ -22,16 +22,23 @@ limitations under the License.
     <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
     <meta content="notranslate" name="google">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <title>PDF.js page viewer using built components</title>
+    <title>Anonymization tool</title>
 
     <style>
         body {
-            background-color: #aaaaaa;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 0;
+            background-color: #AAAAAA;
+            padding-left: 3%;
+            padding-right: 3%;
         }
 
+        div#pageContainer {
+            display: inline-block;
+        }
+
+        div#data-types {
+            display: inline-block;
+            vertical-align: top
+        }
     </style>
 
     <link href="pdfjs-dist/web/pdf_viewer.css" rel="stylesheet">
@@ -41,15 +48,23 @@ limitations under the License.
 </head>
 
 <body tabindex="1">
+<div id="welcome-screen">
+    <h1>Anonymization tool</h1>
+    <h2>Please upload the PDF, JPG or PNG file.</h2>
+</div>
+
 
 <div th:if="${message}">
     <h3 th:text="${message}"></h3>
+    <div th:if="${processedFileReadyMessage}">
+        <h3 th:text="${processedFileReadyMessage}"></h3>
+    </div>
 </div>
 
 <div>
     <ul>
         <li th:each="file : ${files}">
-            <a th:href="${file}" th:text="${file}"></a>
+            Uploaded File: <a th:href="${file}" th:text="${file}"></a>
         </li>
     </ul>
 </div>
@@ -60,7 +75,7 @@ limitations under the License.
             <tr>
                 <td>File to upload:</td>
                 <td><input accept="application/pdf, image/jpeg, image/png" name="file" type="file"/></td>
-                <td><input type="submit" value="Upload"/></td>
+                <td><input disabled type="submit" value="Upload"/></td>
             </tr>
         </table>
     </form>
@@ -70,14 +85,43 @@ limitations under the License.
     <div id="pdf-buttons">
         <button id="pdf-prev">Previous</button>
         <button id="pdf-next">Next</button>
-        <button id="draw">Show Boxes</button>
-        <button id="draw2">Confirm</button>
+        <button id="do-refactor">Do anonymization</button>
         <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
     </div>
 
+
 </div>
 
-<div class="pdfViewer singlePageView" id="pageContainer"></div>
+<div id="section">
+    <div class="pdfViewer singlePageView" id="pageContainer"></div>
+    <div id="data-types">
+        <button id="draw">Show Boxes</button>
+        <br>
+        <label>
+            <input checked name="data-type1" type="checkbox" value="PESEL">
+        </label>PESEL numbers<br>
+        <label>
+            <input checked name="data-type2" type="checkbox" value="NIP">
+        </label>NIP numbers<br>
+        <label>
+            <input checked name="data-type3" type="checkbox" value="REGON">
+        </label>REGON numbers<br>
+        <label>
+            <input checked name="data-type4" type="checkbox" value="Name">
+        </label>First and Last Names<br>
+        <label>
+            <input checked name="data-type5" type="checkbox" value="Phone_Number">
+        </label>Phone Numbers<br>
+        <label>
+            <input checked name="data-type6" type="checkbox" value="address">
+        </label>Addresses<br>
+        <label>
+            <input checked name="data-type7" type="checkbox" value="date">
+        </label>Dates<br>
+
+
+    </div>
+</div>
 
 <script th:inline="javascript">
     var DEFAULT_URL = [[${files}]];

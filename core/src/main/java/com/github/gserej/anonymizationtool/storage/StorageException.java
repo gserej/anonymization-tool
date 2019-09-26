@@ -1,12 +1,12 @@
 package com.github.gserej.anonymizationtool.storage;
 
-public class StorageException extends RuntimeException {
+class StorageException extends RuntimeException {
 
-    public StorageException(String message) {
+    StorageException(String message) {
         super(message);
     }
 
-    public StorageException(String message, Throwable cause) {
+    StorageException(String message, Throwable cause) {
         super(message, cause);
     }
 }

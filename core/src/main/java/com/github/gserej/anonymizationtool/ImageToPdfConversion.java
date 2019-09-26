@@ -17,18 +17,19 @@ import java.util.List;
 
 @Slf4j
 @Service
-class CreatePdfFromImage {
+class ImageToPdfConversion {
 
     private static Path rootLocation;
 
     @Autowired
-    public CreatePdfFromImage(StorageProperties properties) {
+    public ImageToPdfConversion(StorageProperties properties) {
         rootLocation = Paths.get(properties.getLocation());
     }
 
-    // creates a Pdf file from a image
-    static String createPdfFromSingleImage(File imageFile, String fileName) throws IOException {
-        new File(rootLocation + "/tempPdfLocation").mkdirs();
+    static File createPdfFromSingleImage(File imageFile, String fileName) throws IOException {
+
+        if (!new File(rootLocation + "/tempPdfLocation").mkdirs())
+            log.error("folder hasn't been created");
 
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage();
@@ -40,17 +41,21 @@ class CreatePdfFromImage {
                 float widthRatio = page.getCropBox().getWidth() / width;
                 float heightRatio = page.getCropBox().getHeight() / height;
                 float ratio = Math.min(widthRatio, heightRatio);
-                TesseractOCR.setRatio(ratio);
-                contents.drawImage(pdImage, page.getCropBox().getWidth() - ratio * width, page.getCropBox().getHeight() - ratio * height, ratio * width, ratio * height);
+                Ratio.setRatio(ratio);
+                contents.drawImage(pdImage,
+                        page.getCropBox().getWidth() - ratio * width, page.getCropBox().getHeight() - ratio * height,
+                        ratio * width, ratio * height);
             }
             String pdfPath = rootLocation + "/tempPdfLocation/" + FilenameUtils.removeExtension(fileName) + ".pdf";
             doc.save(pdfPath);
-            return pdfPath;
+            return new File(pdfPath);
         }
     }
 
     static String createPdfFromMultipleImages(List<File> imageFiles, String fileName, File originalDocument) throws IOException {
-        new File(rootLocation + "/processedPdf").mkdirs();
+
+        if (!new File(rootLocation + "/processedPdf").mkdirs())
+            log.info("folder hasn't been created");
 
         try (PDDocument doc = PDDocument.load(originalDocument)) {
 

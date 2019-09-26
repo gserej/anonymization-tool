@@ -1,7 +1,5 @@
 package com.github.gserej.anonymizationtool;
 
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.ITesseract;
@@ -20,70 +18,70 @@ import java.util.Map;
 
 @Slf4j
 @Service
-class TesseractOCR {
+public class TesseractOCR {
 
-    @Getter
-    @Setter
-    private static float ratio = 1;
-
-    // takes a imageFile, extracts words from it and adds rectangles to rectangleBoxList
-    static void imageFileOCR(File imageFile, boolean singleFile, Map imagePositionAndSize) {
-
+    private static ITesseract initOcr() {
         ITesseract instance = new Tesseract();  // JNA Interface Mapping
         // ITesseract instance = new Tesseract1(); // JNA Direct Mapping
         try {
             String resourcePath = ResourceUtils.getFile("classpath:tessdata").getAbsolutePath();
             instance.setDatapath(resourcePath); // path to tessdata directory
+
         } catch (FileNotFoundException e) {
-            log.error(e.getMessage());
-            return;
+            log.error("File not found: " + e.getMessage());
         }
+        return instance;
+    }
 
-        BufferedImage bi;
+    static void doOcrOnSingleFile(File imageFile, float ratio) {
 
-        if (singleFile) {
-            try {
-                bi = ImageIO.read(imageFile);
+        ITesseract instance = initOcr();
+        try {
+            BufferedImage bi = ImageIO.read(imageFile);
+            int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
+            List<Word> wordList = instance.getWords(bi, level);
 
-                int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
-                List<Word> wordList = instance.getWords(bi, level);
-
-                for (Word word : wordList) {
-                    RectangleBox rectangleBox = new RectangleBox(false,
-                            ratio * (float) word.getBoundingBox().getX(),
-                            ratio * (float) word.getBoundingBox().getY(),
-                            ratio * (float) word.getBoundingBox().getWidth(),
-                            ratio * (float) word.getBoundingBox().getHeight(),
-                            1, word.getText(), 1);
-                    RectangleBoxLists.rectangleBoxList.add(rectangleBox);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            for (Word word : wordList) {
+                RectangleBox rectangleBox = new RectangleBox(false,
+                        ratio * (float) word.getBoundingBox().getX(),
+                        ratio * (float) word.getBoundingBox().getY(),
+                        ratio * (float) word.getBoundingBox().getWidth(),
+                        ratio * (float) word.getBoundingBox().getHeight(),
+                        1, word.getText(), 1);
+                RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
             }
-        } else {
-            float positionX = (float) imagePositionAndSize.get("Position X");
-            float positionY = (float) imagePositionAndSize.get("Position Y");
-            float sizeX = (float) imagePositionAndSize.get("Size X");
-            float sizeY = (float) imagePositionAndSize.get("Size Y");
-            float pageNum = (float) imagePositionAndSize.get("page");
-            float pageHeight = (float) imagePositionAndSize.get("page Height");
-            try {
-                bi = ImageIO.read(imageFile);
-                int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
-                List<Word> wordList = instance.getWords(bi, level);
+        } catch (IOException e) {
+            log.error("Error: " + e);
+        }
+    }
 
-                for (Word word : wordList) {
-                    RectangleBox rectangleBox = new RectangleBox(false,
-                            positionX + (float) word.getBoundingBox().getX() * sizeX / bi.getWidth(),
-                            -positionY + pageHeight - sizeY + (float) word.getBoundingBox().getY() * sizeY / bi.getHeight(),
-                            (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
-                            (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
-                            1, word.getText(), Math.round(pageNum));
-                    RectangleBoxLists.rectangleBoxList.add(rectangleBox);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+    static void doOcrOnMultipleFiles(File imageFile, Map imagePositionAndSize) {
+
+        ITesseract instance = initOcr();
+
+        float positionX = (float) imagePositionAndSize.get("Position X");
+        float positionY = (float) imagePositionAndSize.get("Position Y");
+        float sizeX = (float) imagePositionAndSize.get("Size X");
+        float sizeY = (float) imagePositionAndSize.get("Size Y");
+        float pageNum = (float) imagePositionAndSize.get("page");
+        float pageHeight = (float) imagePositionAndSize.get("page Height");
+
+        try {
+            BufferedImage bi = ImageIO.read(imageFile);
+            int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
+            List<Word> wordList = instance.getWords(bi, level);
+
+            for (Word word : wordList) {
+                RectangleBox rectangleBox = new RectangleBox(false,
+                        positionX + (float) word.getBoundingBox().getX() * sizeX / bi.getWidth(),
+                        -positionY + pageHeight - sizeY + (float) word.getBoundingBox().getY() * sizeY / bi.getHeight(),
+                        (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
+                        (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
+                        1, word.getText(), Math.round(pageNum));
+                RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
             }
+        } catch (IOException e) {
+            log.error("Error: " + e);
         }
     }
 }

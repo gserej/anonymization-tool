@@ -144,7 +144,8 @@ public class PrintDrawLocations extends PDFTextStripper {
             String imageFilename = filename;
             int pt = imageFilename.lastIndexOf('.');
             imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
-            new File(rootLocation + "/tempImages/" + imageFilename).mkdirs();
+            if (!new File(rootLocation + "/tempImages/" + imageFilename).mkdirs())
+                log.error("couldn't create /tempImages/ folder");
             File file = new File(rootLocation + "/tempImages/" + imageFilename);
             ImageIO.write(image, "png", file);
 
@@ -231,8 +232,7 @@ public class PrintDrawLocations extends PDFTextStripper {
                 (float) s.getBounds2D().getHeight(),
                 1, singleWord, page);
 
-
-        RectangleBoxLists.rectangleBoxList.add(rectangleBox);
+        RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
 
     }
 }

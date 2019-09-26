@@ -77,6 +77,7 @@ public class PrintImageLocations extends PDFStreamEngine {
 
         try (PDDocument document = PDDocument.load(file)) {
             PrintImageLocations printer = new PrintImageLocations();
+            //noinspection ResultOfMethodCallIgnored
             new File(rootLocation + "/extractedImages").mkdirs();
             pageNum = 1;
             for (PDPage page : document.getPages()) {
@@ -114,7 +115,7 @@ public class PrintImageLocations extends PDFStreamEngine {
                 imagePositionAndSize.put("Size Y", imageYScale);
                 imagePositionAndSize.put("page", (float) getPageNum());
                 imagePositionAndSize.put("page Height", getPageHeight());
-                TesseractOCR.imageFileOCR(imgFile, false, imagePositionAndSize);
+                TesseractOCR.doOcrOnMultipleFiles(imgFile, imagePositionAndSize);
                 imagePositionAndSize.clear();
             } else if (xobject instanceof PDFormXObject) {
                 PDFormXObject form = (PDFormXObject) xobject;
