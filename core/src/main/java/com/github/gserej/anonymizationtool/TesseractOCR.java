@@ -29,34 +29,37 @@ public class TesseractOCR {
 
         } catch (FileNotFoundException e) {
             log.error("File not found: " + e.getMessage());
+            return null;
         }
         return instance;
     }
 
-    static void doOcrOnSingleFile(File imageFile, float ratio) {
-
+    static boolean doOcrOnSingleFile(File imageFile, float ratio) {
         ITesseract instance = initOcr();
-        try {
-            BufferedImage bi = ImageIO.read(imageFile);
-            int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
-            List<Word> wordList = instance.getWords(bi, level);
+        if (instance != null) {
+            try {
+                BufferedImage bi = ImageIO.read(imageFile);
+                int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
+                List<Word> wordList = instance.getWords(bi, level);
 
-            for (Word word : wordList) {
-                RectangleBox rectangleBox = new RectangleBox(false,
-                        ratio * (float) word.getBoundingBox().getX(),
-                        ratio * (float) word.getBoundingBox().getY(),
-                        ratio * (float) word.getBoundingBox().getWidth(),
-                        ratio * (float) word.getBoundingBox().getHeight(),
-                        1, word.getText(), 1);
-                RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
+                for (Word word : wordList) {
+                    RectangleBox rectangleBox = new RectangleBox(false,
+                            ratio * (float) word.getBoundingBox().getX(),
+                            ratio * (float) word.getBoundingBox().getY(),
+                            ratio * (float) word.getBoundingBox().getWidth(),
+                            ratio * (float) word.getBoundingBox().getHeight(),
+                            1, word.getText(), 1);
+                    RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
+                }
+                return true;
+            } catch (IOException e) {
+                log.error("Error: " + e);
             }
-        } catch (IOException e) {
-            log.error("Error: " + e);
         }
+        return false;
     }
 
     static void doOcrOnMultipleFiles(File imageFile, Map imagePositionAndSize) {
-
         ITesseract instance = initOcr();
 
         float positionX = (float) imagePositionAndSize.get("Position X");
@@ -65,23 +68,24 @@ public class TesseractOCR {
         float sizeY = (float) imagePositionAndSize.get("Size Y");
         float pageNum = (float) imagePositionAndSize.get("page");
         float pageHeight = (float) imagePositionAndSize.get("page Height");
+        if (instance != null) {
+            try {
+                BufferedImage bi = ImageIO.read(imageFile);
+                int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
+                List<Word> wordList = instance.getWords(bi, level);
 
-        try {
-            BufferedImage bi = ImageIO.read(imageFile);
-            int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
-            List<Word> wordList = instance.getWords(bi, level);
-
-            for (Word word : wordList) {
-                RectangleBox rectangleBox = new RectangleBox(false,
-                        positionX + (float) word.getBoundingBox().getX() * sizeX / bi.getWidth(),
-                        -positionY + pageHeight - sizeY + (float) word.getBoundingBox().getY() * sizeY / bi.getHeight(),
-                        (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
-                        (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
-                        1, word.getText(), Math.round(pageNum));
-                RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
+                for (Word word : wordList) {
+                    RectangleBox rectangleBox = new RectangleBox(false,
+                            positionX + (float) word.getBoundingBox().getX() * sizeX / bi.getWidth(),
+                            -positionY + pageHeight - sizeY + (float) word.getBoundingBox().getY() * sizeY / bi.getHeight(),
+                            (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
+                            (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
+                            1, word.getText(), Math.round(pageNum));
+                    RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
+                }
+            } catch (IOException e) {
+                log.error("Error: " + e);
             }
-        } catch (IOException e) {
-            log.error("Error: " + e);
         }
     }
 }

@@ -61,11 +61,6 @@ public class FileUploadController {
         return "pageviewer";
     }
 
-    @ModelAttribute("rectListModel")
-    private Object rectListModel() {
-        return getModelObject();
-    }
-
     @GetMapping("/files/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
@@ -98,17 +93,21 @@ public class FileUploadController {
         return "redirect:/";
     }
 
-    private void processPdfFile(File fileToProcess, MultipartFile file) {
+    @GetMapping("/additionalRects")
+    @ResponseBody
+    public Object sendAdditionalRects() {
+        return getModelObject();
+    }
 
+    private void processPdfFile(File fileToProcess, MultipartFile file) {
         setTempName(file.getOriginalFilename());
         try {
-            PrintDrawLocations.printDrawLocation(fileToProcess, false);
+            WordsPrinterDrawer.printLocations(fileToProcess);
             setModelObject(RectangleParsers.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
             log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
-
             Runnable r = () -> {
                 try {
-                    PrintImageLocations.imageLocations(fileToProcess);
+                    ImageLocationsExtractor.extractImages(fileToProcess);
                     setModelObject(RectangleParsers.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
                     log.info("Additional rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
                 } catch (IOException e) {
@@ -118,7 +117,7 @@ public class FileUploadController {
             new Thread(r).start();
 
         } catch (IOException e) {
-            log.error("Error: " + e);
+            log.error("Error processing PDF file: " + e);
         }
     }
 
@@ -128,18 +127,20 @@ public class FileUploadController {
             MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
                     imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(new FileInputStream(imagePdfFile)));
             storageService.store(multipartFile);
-
             setTempName(multipartFile.getOriginalFilename());
+
             Runnable r = () -> {
-                TesseractOCR.doOcrOnSingleFile(fileToProcess, Ratio.getRatio());
-                log.info("OCR processing: done");
-                setModelObject(RectangleParsers.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
-                log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+                boolean ocrSuccessful = TesseractOCR.doOcrOnSingleFile(fileToProcess, Ratio.getRatio());
+                if (ocrSuccessful) {
+                    log.info("OCR processing: done");
+                    setModelObject(RectangleParsers.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
+                    log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+                }
             };
             new Thread(r).start();
 
         } catch (IOException e) {
-            log.error("Error: " + e);
+            log.error("Error processing image file: " + e);
         }
     }
 
@@ -152,7 +153,7 @@ public class FileUploadController {
         log.info(fileToProcess.getName());
 
         try {
-            PrintDrawLocations.printDrawLocation(fileToProcess, true);
+            WordsPrinterDrawer.drawLocations(fileToProcess);
 
             log.info(tempImagesList.toString());
             List<File> imageFilesList = new ArrayList<>();
@@ -164,17 +165,17 @@ public class FileUploadController {
             storageService.storeAsFile(new File(pathToDonePdf));
             setTempName(null);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error processing file" + e);
         }
 
-        redirectAttributes.addFlashAttribute("processedFileReadyMessage",
+        redirectAttributes.addFlashAttribute("fileReadyMessage",
                 "Your file was converted, click the link below to download it.");
 
         return "redirect:/";
     }
 
     @ExceptionHandler(StorageFileNotFoundException.class)
-    public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {
+    public ResponseEntity<?> handleStorageFileNotFound() {
         return ResponseEntity.notFound().build();
     }
 

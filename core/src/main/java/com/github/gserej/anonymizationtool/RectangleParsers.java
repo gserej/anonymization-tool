@@ -10,22 +10,31 @@ import java.util.List;
 public class RectangleParsers {
 
     static List<RectangleBox> parseRectangleBoxList(List<RectangleBox> rectangleBoxList) {
+
         for (RectangleBox rectangleBox : rectangleBoxList) {
             String word = rectangleBox.getWord();
-            if (NumberTypeValidators.isValidNIP(word) ||
-                    NumberTypeValidators.isValidPesel(word) ||
-                    NumberTypeValidators.isValidREGON(word) ||
-                    GenericValidator.isDate(word, null) ||
-                    word.equals("PX031608") ||
-                    word.equals("Lorem") ||
-                    word.equals("000100700006176")) {
-
-                if (!RectangleBoxLists.rectangleBoxListParsed.contains(rectangleBox)) {
-                    RectangleBoxLists.rectangleBoxListParsed.add(rectangleBox);
-                }
+            if (NumberTypeValidators.isValidPesel(word)) {
+                rectangleBox.setTypeOfData(2);
+                addRectangleToNewList(rectangleBox);
+            } else if (NumberTypeValidators.isValidNIP(word)) {
+                rectangleBox.setTypeOfData(3);
+                addRectangleToNewList(rectangleBox);
+            } else if (NumberTypeValidators.isValidREGON(word)) {
+                rectangleBox.setTypeOfData(4);
+                addRectangleToNewList(rectangleBox);
+            } else if (GenericValidator.isDate(word, null)) {
+                rectangleBox.setTypeOfData(8);
+                addRectangleToNewList(rectangleBox);
+            } else if (word.equalsIgnoreCase("Lorem")) {
+                addRectangleToNewList(rectangleBox);
             }
-
         }
         return RectangleBoxLists.rectangleBoxListParsed;
+    }
+
+    private static void addRectangleToNewList(RectangleBox rectangleBox) {
+        if (!RectangleBoxLists.rectangleBoxListParsed.contains(rectangleBox)) {
+            RectangleBoxLists.rectangleBoxListParsed.add(rectangleBox);
+        }
     }
 }

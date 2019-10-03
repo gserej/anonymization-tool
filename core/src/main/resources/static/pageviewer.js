@@ -26,8 +26,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
     'pdfjs-dist/build/pdf.worker.js';
 
 // Some PDFs need external cmaps.
-//
-var CMAP_URL = 'pdfjs-dist/cmaps/';
+var CMAP_URL = 'pdfjs-dist/web/cmaps/';
 var CMAP_PACKED = true;
 
 var PAGE_TO_VIEW = 1;
@@ -39,6 +38,36 @@ var container = document.getElementById('pageContainer');
 var pdf_prev = $("#pdf-prev");
 var pdf_next = $("#pdf-next");
 
+pdf_prev.on('click', function () {
+    if (PAGE_TO_VIEW !== 1) {
+        PAGE_TO_VIEW--;
+        render();
+        disableEnablePrevNext();
+    }
+});
+
+pdf_next.on('click', function () {
+    if (PAGE_TO_VIEW !== number_of_pages) {
+        PAGE_TO_VIEW++;
+        render();
+        disableEnablePrevNext();
+    }
+});
+
+disableEnablePrevNext();
+
+function disableEnablePrevNext() {
+    if (PAGE_TO_VIEW === 1) {
+        pdf_prev.prop("disabled", true);
+    } else {
+        pdf_prev.prop("disabled", false);
+    }
+    if (PAGE_TO_VIEW === number_of_pages) {
+        pdf_next.prop("disabled", true);
+    } else {
+        pdf_next.prop("disabled", false);
+    }
+}
 
 var loadingTask = pdfjsLib.getDocument({
     url: DEFAULT_URL,
@@ -85,45 +114,55 @@ function render() {
                 pdf_next.prop("disabled", false);
             }
 
-
+            startAjaxGet();
+            
             return pdfPageView.draw();
         })
     });
 }
 
-
 render();
-pdf_prev.prop("disabled", true);
 
-function disableEnablePrevNext() {
-    if (PAGE_TO_VIEW === 1) {
-        pdf_prev.prop("disabled", true);
-    } else {
-        pdf_prev.prop("disabled", false);
-    }
-    if (PAGE_TO_VIEW === number_of_pages) {
-        pdf_next.prop("disabled", true);
-    } else {
-        pdf_next.prop("disabled", false);
-    }
+
+var startAjaxGet = (function () {
+    var executed = false;
+    return function () {
+        if (!executed) {
+            executed = true;
+            ajaxGet()
+        }
+    };
+})();
+
+function ajaxGet() {
+    $.ajax({
+        type: "get",
+        url: "/additionalRects",
+        contentType: 'application/json',
+        success: function (data) {
+            if (!$.trim(data)) {
+                console.log("Empty rectangle list, trying again in 1 second.");
+                setTimeout(function () {
+                    ajaxGet();
+                }, 1000)
+            } else {
+                var additionalRectListJS = JSON.stringify(data);
+                for (var o in data) {
+                    if (data.hasOwnProperty(o)) {
+                        rects.push(data[o]);
+                    }
+                }
+                console.log("Received following rectangle list: " + additionalRectListJS);
+            }
+        },
+        error: function () {
+            console.log("Fail, trying again in 1 second.");
+            setTimeout(function () {
+                ajaxGet();
+            }, 2000)
+        }
+    });
 }
-
-pdf_prev.on('click', function () {
-    if (PAGE_TO_VIEW !== 1) {
-        PAGE_TO_VIEW--;
-        render();
-        disableEnablePrevNext();
-    }
-});
-
-pdf_next.on('click', function () {
-    if (PAGE_TO_VIEW !== number_of_pages) {
-        PAGE_TO_VIEW++;
-        render();
-        disableEnablePrevNext();
-    }
-});
-
 $("#do-refactor").on('click', function () {
 
     var filteredRects = rects.filter(function (e) {
@@ -170,7 +209,9 @@ function removeRec(rectNum) {
 
 var rects = [];
 for (var o in rectListJS) {
-    rects.push(rectListJS[o]);
+    if (rectListJS.hasOwnProperty(o)) {
+        rects.push(rectListJS[o]);
+    }
 }
 
 $("#draw").on('click', function () {
@@ -181,20 +222,59 @@ $("#draw").on('click', function () {
     function drawAllRed() {
         for (var i = 0, len = rects.length; i < len; i++) {
             if (rects[i].page === PAGE_TO_VIEW) {
-                drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                if ($("input[value='PESEL']").is(":checked")) {
+                    if (rects[i].typeOfData === 2) {
+                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    }
+                }
+                if ($("input[value='NIP']").is(":checked")) {
+                    if (rects[i].typeOfData === 3) {
+                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    }
+                }
+                if ($("input[value='REGON']").is(":checked")) {
+                    if (rects[i].typeOfData === 4) {
+                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    }
+                }
+                if ($("input[value='Name']").is(":checked")) {
+                    if (rects[i].typeOfData === 5) {
+                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    }
+                }
+                if ($("input[value='Phone_Number']").is(":checked")) {
+                    if (rects[i].typeOfData === 6) {
+                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    }
+                }
+                if ($("input[value='Address']").is(":checked")) {
+                    if (rects[i].typeOfData === 7) {
+                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    }
+                }
+                if ($("input[value='date']").is(":checked")) {
+                    if (rects[i].typeOfData === 8) {
+                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    }
+                }
+                if (rects[i].typeOfData === 1) {
+                    drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                }
+
             }
         }
     }
 
     drawAllRed();
     var BB, BBoffsetX, BBoffsetY;
-    setBB();
 
     function setBB() {
         BB = c_page.get(0).getBoundingClientRect();
         BBoffsetX = BB.left;
         BBoffsetY = BB.top;
     }
+
+    setBB();
 
     function collides(rects, x, y) {
         var isCollision = false;

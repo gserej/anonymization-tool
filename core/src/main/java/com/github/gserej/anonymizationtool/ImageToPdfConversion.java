@@ -29,7 +29,7 @@ class ImageToPdfConversion {
     static File createPdfFromSingleImage(File imageFile, String fileName) throws IOException {
 
         if (!new File(rootLocation + "/tempPdfLocation").mkdirs())
-            log.error("folder hasn't been created");
+            log.info("folder hasn't been created");
 
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage();
@@ -41,7 +41,7 @@ class ImageToPdfConversion {
                 float widthRatio = page.getCropBox().getWidth() / width;
                 float heightRatio = page.getCropBox().getHeight() / height;
                 float ratio = Math.min(widthRatio, heightRatio);
-                Ratio.setRatio(ratio);
+                new Ratio(ratio);
                 contents.drawImage(pdImage,
                         page.getCropBox().getWidth() - ratio * width, page.getCropBox().getHeight() - ratio * height,
                         ratio * width, ratio * height);

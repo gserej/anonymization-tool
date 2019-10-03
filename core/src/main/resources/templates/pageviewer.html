@@ -16,7 +16,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<html dir="ltr" mozdisallowselectionprint xmlns:th="https://www.thymeleaf.org" lang="en">
+<html dir="ltr" lang="en"
+      mozdisallowselectionprint xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
@@ -39,6 +40,7 @@ limitations under the License.
             display: inline-block;
             vertical-align: top
         }
+
     </style>
 
     <link href="pdfjs-dist/web/pdf_viewer.css" rel="stylesheet">
@@ -54,17 +56,19 @@ limitations under the License.
 </div>
 
 
+<!--/*@thymesVar id="message" type=""*/-->
 <div th:if="${message}">
     <h3 th:text="${message}"></h3>
-    <div th:if="${processedFileReadyMessage}">
-        <h3 th:text="${processedFileReadyMessage}"></h3>
+    <!--/*@thymesVar id="fileReadyMessage" type=""*/-->
+    <div th:if="${fileReadyMessage}">
+        <h3 th:text="${fileReadyMessage}"></h3>
     </div>
 </div>
 
 <div>
     <ul>
         <li th:each="file : ${files}">
-            Uploaded File: <a th:href="${file}" th:text="${file}"></a>
+            <a th:href="${file}" th:text="${file}"></a>
         </li>
     </ul>
 </div>
@@ -92,41 +96,39 @@ limitations under the License.
 
 </div>
 
-<div id="section">
+<div id="pdf-section">
     <div class="pdfViewer singlePageView" id="pageContainer"></div>
     <div id="data-types">
         <button id="draw">Show Boxes</button>
         <br>
         <label>
-            <input checked name="data-type1" type="checkbox" value="PESEL">
+            <input checked name="data-type2" type="checkbox" value="PESEL">
         </label>PESEL numbers<br>
         <label>
-            <input checked name="data-type2" type="checkbox" value="NIP">
+            <input checked name="data-type3" type="checkbox" value="NIP">
         </label>NIP numbers<br>
         <label>
-            <input checked name="data-type3" type="checkbox" value="REGON">
+            <input checked name="data-type4" type="checkbox" value="REGON">
         </label>REGON numbers<br>
         <label>
-            <input checked name="data-type4" type="checkbox" value="Name">
-        </label>First and Last Names<br>
+            <input checked name="data-type5" type="checkbox" value="Name">
+        </label>First and last names<br>
         <label>
-            <input checked name="data-type5" type="checkbox" value="Phone_Number">
-        </label>Phone Numbers<br>
+            <input checked name="data-type6" type="checkbox" value="Phone_Number">
+        </label>Phone numbers<br>
         <label>
-            <input checked name="data-type6" type="checkbox" value="address">
+            <input checked name="data-type7" type="checkbox" value="Address">
         </label>Addresses<br>
         <label>
-            <input checked name="data-type7" type="checkbox" value="date">
+            <input checked name="data-type8" type="checkbox" value="Date">
         </label>Dates<br>
-
-
     </div>
 </div>
 
 <script th:inline="javascript">
     var DEFAULT_URL = [[${files}]];
     var rectListJS = [[${rectListModel}]];
-    console.log(rectListJS);
+    console.log("Initial rect list: " + rectListJS);
 </script>
 
 <script src="pageviewer.js"></script>

@@ -23,7 +23,7 @@ class RectangleBoxLists {
 
     @Getter
     @Setter
-    static List<RectangleBox> rectangleBoxListMarked;
+    static List<RectangleBox> rectangleBoxListMarked = new ArrayList<>();
 
 }
 
