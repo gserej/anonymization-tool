@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.gserej.anonymizationtool;
+package com.github.gserej.anonymizationtool.services;
 
-import com.github.gserej.anonymizationtool.storage.StorageProperties;
+import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class ImageLocationsExtractor extends PDFStreamEngine {
+public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine implements ImageLocationsExtractionService {
     @Setter
     @Getter
     private static int pageNum;
@@ -57,12 +57,15 @@ public class ImageLocationsExtractor extends PDFStreamEngine {
 
     private static Path rootLocation;
 
+    private OCRService ocrService;
+
     @Autowired
-    public ImageLocationsExtractor(StorageProperties properties) {
+    public ImageLocationsExtractionServiceImpl(StorageProperties properties, OCRService ocrService) {
         rootLocation = Paths.get(properties.getLocation());
+        this.ocrService = ocrService;
     }
 
-    private ImageLocationsExtractor() {
+    private ImageLocationsExtractionServiceImpl() {
         addOperator(new Concatenate());
         addOperator(new DrawObject());
         addOperator(new SetGraphicsStateParameters());
@@ -73,10 +76,11 @@ public class ImageLocationsExtractor extends PDFStreamEngine {
 
 
     // Takes a PDF file, extracts images from it and calls TesseractOCR.doOcrOnMultipleFiles() on them
-    static void extractImages(File file) throws IOException {
+    @Override
+    public void extractImages(File file) throws IOException {
 
         try (PDDocument document = PDDocument.load(file)) {
-            ImageLocationsExtractor printer = new ImageLocationsExtractor();
+            ImageLocationsExtractionServiceImpl printer = new ImageLocationsExtractionServiceImpl();
             //noinspection ResultOfMethodCallIgnored
             new File(rootLocation + "/extractedImages").mkdirs();
             pageNum = 1;
@@ -115,7 +119,8 @@ public class ImageLocationsExtractor extends PDFStreamEngine {
                 imagePositionAndSize.put("Size Y", imageYScale);
                 imagePositionAndSize.put("page", (float) getPageNum());
                 imagePositionAndSize.put("page Height", getPageHeight());
-                TesseractOCR.doOcrOnMultipleFiles(imgFile, imagePositionAndSize);
+                log.info("do image exist" + imgFile.exists() + "  do imagePositions exists " + imagePositionAndSize);
+                ocrService.doOcrOnMultipleFiles(imgFile, imagePositionAndSize);
                 imagePositionAndSize.clear();
             } else if (xobject instanceof PDFormXObject) {
                 PDFormXObject form = (PDFormXObject) xobject;

@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.storage;
+package com.github.gserej.anonymizationtool.filestorage;
 
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,13 +1,14 @@
-package com.github.gserej.anonymizationtool.util;
+package com.github.gserej.anonymizationtool.services;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 
 @Service
-public class NumberTypeValidators {
+public class NumberTypeValidationServiceImpl implements NumberTypeValidationService {
 
-    public static boolean isValidPesel(String pesel) {
+    @Override
+    public boolean isValidPesel(String pesel) {
         pesel = pesel.trim();
         if (pesel.length() != 11) return false;
         if (!StringUtils.isNumeric(pesel)) {
@@ -30,7 +31,8 @@ public class NumberTypeValidators {
         return (sum == checksum);
     }
 
-    public static boolean isValidNIP(String nip) {
+    @Override
+    public boolean isValidNIP(String nip) {
         int nsize = nip.length();
         if (nsize != 10) {
             return false;
@@ -51,7 +53,8 @@ public class NumberTypeValidators {
 
     }
 
-    public static boolean isValidREGON(String regon) {
+    @Override
+    public boolean isValidREGON(String regon) {
 
         int rsize = regon.length();
         if (!((rsize == 9) || (rsize == 14))) {

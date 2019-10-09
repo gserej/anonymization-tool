@@ -14,10 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.gserej.anonymizationtool;
+package com.github.gserej.anonymizationtool.services;
 
-import com.github.gserej.anonymizationtool.storage.StorageProperties;
-import com.github.gserej.anonymizationtool.storage.StorageService;
+import com.github.gserej.anonymizationtool.model.RectangleBox;
+import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
+import com.github.gserej.anonymizationtool.filestorage.StorageService;
+import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +80,7 @@ public class WordsPrinterDrawer extends PDFTextStripper {
         WordsPrinterDrawer.filename = filename;
     }
 
-    static void printLocations(File file) throws IOException {
+    public static void printLocations(File file) throws IOException {
         try (PDDocument document = PDDocument.load(file)) {
             setReadyToDraw(false);
             setUpStripper(file, document);
@@ -87,7 +89,7 @@ public class WordsPrinterDrawer extends PDFTextStripper {
         }
     }
 
-    static void drawLocations(File file) throws IOException {
+    public static void drawLocations(File file) throws IOException {
         try (PDDocument document = PDDocument.load(file)) {
             setReadyToDraw(true);
             setUpStripper(file, document);
@@ -103,7 +105,7 @@ public class WordsPrinterDrawer extends PDFTextStripper {
             setPageNumber(page + 1);
             stripper.stripPage(page);
         }
-        FileUploadController.setTempImagesList(tempImagesList);
+        MarkedRectanglesProcessingServiceImpl.setTempImagesList(tempImagesList);
     }
 
     private void stripPage(int page) throws IOException {

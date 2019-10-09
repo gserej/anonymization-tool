@@ -1,25 +1,33 @@
-package com.github.gserej.anonymizationtool;
+package com.github.gserej.anonymizationtool.services;
 
-import com.github.gserej.anonymizationtool.util.NumberTypeValidators;
+import com.github.gserej.anonymizationtool.model.RectangleBox;
+import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
 import org.apache.commons.validator.GenericValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class RectangleParsers {
+public class RectangleParsingServiceImpl implements RectangleParsingService {
 
-    static List<RectangleBox> parseRectangleBoxList(List<RectangleBox> rectangleBoxList) {
+    private NumberTypeValidationService numberTypeValidationService;
+
+    public RectangleParsingServiceImpl(NumberTypeValidationService numberTypeValidationService) {
+        this.numberTypeValidationService = numberTypeValidationService;
+    }
+
+    @Override
+    public List<RectangleBox> parseRectangleBoxList(List<RectangleBox> rectangleBoxList) {
 
         for (RectangleBox rectangleBox : rectangleBoxList) {
             String word = rectangleBox.getWord();
-            if (NumberTypeValidators.isValidPesel(word)) {
+            if (numberTypeValidationService.isValidPesel(word)) {
                 rectangleBox.setTypeOfData(2);
                 addRectangleToNewList(rectangleBox);
-            } else if (NumberTypeValidators.isValidNIP(word)) {
+            } else if (numberTypeValidationService.isValidNIP(word)) {
                 rectangleBox.setTypeOfData(3);
                 addRectangleToNewList(rectangleBox);
-            } else if (NumberTypeValidators.isValidREGON(word)) {
+            } else if (numberTypeValidationService.isValidREGON(word)) {
                 rectangleBox.setTypeOfData(4);
                 addRectangleToNewList(rectangleBox);
             } else if (GenericValidator.isDate(word, null)) {
@@ -32,7 +40,8 @@ public class RectangleParsers {
         return RectangleBoxLists.rectangleBoxListParsed;
     }
 
-    private static void addRectangleToNewList(RectangleBox rectangleBox) {
+    @Override
+    public void addRectangleToNewList(RectangleBox rectangleBox) {
         if (!RectangleBoxLists.rectangleBoxListParsed.contains(rectangleBox)) {
             RectangleBoxLists.rectangleBoxListParsed.add(rectangleBox);
         }

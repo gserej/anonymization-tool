@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.storage;
+package com.github.gserej.anonymizationtool.filestorage;
 
 public class StorageFileNotFoundException extends StorageException {
 

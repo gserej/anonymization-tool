@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.storage;
+package com.github.gserej.anonymizationtool.filestorage;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;

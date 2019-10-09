@@ -208,11 +208,6 @@ function removeRec(rectNum) {
 }
 
 var rects = [];
-for (var o in rectListJS) {
-    if (rectListJS.hasOwnProperty(o)) {
-        rects.push(rectListJS[o]);
-    }
-}
 
 $("#draw").on('click', function () {
 

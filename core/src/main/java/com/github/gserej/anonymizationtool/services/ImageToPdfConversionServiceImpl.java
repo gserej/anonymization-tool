@@ -1,5 +1,7 @@
-package com.github.gserej.anonymizationtool;
-import com.github.gserej.anonymizationtool.storage.StorageProperties;
+package com.github.gserej.anonymizationtool.services;
+
+import com.github.gserej.anonymizationtool.model.Ratio;
+import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -17,16 +19,17 @@ import java.util.List;
 
 @Slf4j
 @Service
-class ImageToPdfConversion {
+public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionService {
 
     private static Path rootLocation;
 
     @Autowired
-    public ImageToPdfConversion(StorageProperties properties) {
+    public ImageToPdfConversionServiceImpl(StorageProperties properties) {
         rootLocation = Paths.get(properties.getLocation());
     }
 
-    static File createPdfFromSingleImage(File imageFile, String fileName) throws IOException {
+    @Override
+    public File createPdfFromSingleImage(File imageFile, String fileName) throws IOException {
 
         if (!new File(rootLocation + "/tempPdfLocation").mkdirs())
             log.info("folder hasn't been created");
@@ -52,7 +55,8 @@ class ImageToPdfConversion {
         }
     }
 
-    static String createPdfFromMultipleImages(List<File> imageFiles, String fileName, File originalDocument) throws IOException {
+    @Override
+    public String createPdfFromMultipleImages(List<File> imageFiles, String fileName, File originalDocument) throws IOException {
 
         if (!new File(rootLocation + "/processedPdf").mkdirs())
             log.info("folder hasn't been created");

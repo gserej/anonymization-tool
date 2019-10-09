@@ -1,7 +1,7 @@
 package com.github.gserej.anonymizationtool;
 
-import com.github.gserej.anonymizationtool.storage.StorageProperties;
-import com.github.gserej.anonymizationtool.storage.StorageService;
+import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
+import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

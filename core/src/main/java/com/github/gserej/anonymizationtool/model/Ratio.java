@@ -1,8 +1,8 @@
-package com.github.gserej.anonymizationtool;
+package com.github.gserej.anonymizationtool.model;
 
 import lombok.Getter;
 
-class Ratio {
+public class Ratio {
     @Getter
     private static float ratio;
 

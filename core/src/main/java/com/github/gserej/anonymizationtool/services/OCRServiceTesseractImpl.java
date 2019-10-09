@@ -1,5 +1,7 @@
-package com.github.gserej.anonymizationtool;
+package com.github.gserej.anonymizationtool.services;
 
+import com.github.gserej.anonymizationtool.model.RectangleBox;
+import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.ITesseract;
@@ -18,7 +20,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class TesseractOCR {
+public class OCRServiceTesseractImpl implements OCRService {
 
     private static ITesseract initOcr() {
         ITesseract instance = new Tesseract();  // JNA Interface Mapping
@@ -34,7 +36,8 @@ public class TesseractOCR {
         return instance;
     }
 
-    static boolean doOcrOnSingleFile(File imageFile, float ratio) {
+    @Override
+    public boolean doOcrOnSingleFile(File imageFile, float ratio) {
         ITesseract instance = initOcr();
         if (instance != null) {
             try {
@@ -59,7 +62,8 @@ public class TesseractOCR {
         return false;
     }
 
-    static void doOcrOnMultipleFiles(File imageFile, Map imagePositionAndSize) {
+    @Override
+    public void doOcrOnMultipleFiles(File imageFile, Map imagePositionAndSize) {
         ITesseract instance = initOcr();
 
         float positionX = (float) imagePositionAndSize.get("Position X");

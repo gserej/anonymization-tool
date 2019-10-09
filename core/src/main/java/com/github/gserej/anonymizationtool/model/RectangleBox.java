@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool;
+package com.github.gserej.anonymizationtool.model;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Getter
 @Setter
 @ToString
-class RectangleBox {
+public class RectangleBox {
 
     private static final AtomicInteger count = new AtomicInteger(-1);
     private int id;
@@ -22,7 +22,7 @@ class RectangleBox {
     private float h;
     private String word;
 
-    RectangleBox(boolean marked, float x, float y, float w, float h, int typeOfData, String word, int page) {
+    public RectangleBox(boolean marked, float x, float y, float w, float h, int typeOfData, String word, int page) {
         this.id = count.incrementAndGet();
         this.marked = marked;
         this.x = x;
