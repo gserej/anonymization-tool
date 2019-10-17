@@ -1,34 +1,36 @@
 package com.github.gserej.anonymizationtool.services;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class NumberTypeValidationServiceImplTest {
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class NumberTypeValidationServiceImplTest {
 
     private NumberTypeValidationService numberTypeValidationService;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         numberTypeValidationService = new NumberTypeValidationServiceImpl();
     }
 
     @Test
-    public void isValidPesel() {
-        Assert.assertTrue(numberTypeValidationService.isValidPesel("02210313718"));
-        Assert.assertFalse(numberTypeValidationService.isValidPesel("02210313717"));
+    void isValidPesel() {
+        assertTrue(numberTypeValidationService.isValidPesel("02210313718"));
+        assertFalse(numberTypeValidationService.isValidPesel("02210313717"));
     }
 
     @Test
-    public void isValidNIP() {
-        Assert.assertTrue(numberTypeValidationService.isValidNIP("5095608177"));
-        Assert.assertFalse(numberTypeValidationService.isValidNIP("5095608172"));
+    void isValidNIP() {
+        assertTrue(numberTypeValidationService.isValidNIP("5095608177"));
+        assertFalse(numberTypeValidationService.isValidNIP("5095608172"));
     }
 
     @Test
-    public void isValidREGON() {
-        Assert.assertTrue(numberTypeValidationService.isValidREGON("375965280"));
-        Assert.assertFalse(numberTypeValidationService.isValidREGON("375965281"));
+    void isValidREGON() {
+        assertTrue(numberTypeValidationService.isValidREGON("375965280"));
+        assertFalse(numberTypeValidationService.isValidREGON("375965281"));
 
     }
 }

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class FileUploadController {
 
     private final StorageService storageService;
-    private FileProcessingService fileProcessingService;
+    private final FileProcessingService fileProcessingService;
 
     @Autowired
     public FileUploadController(StorageService storageService, FileProcessingService fileProcessingService) {
@@ -31,10 +31,13 @@ public class FileUploadController {
     }
 
     @GetMapping("/")
-    public String showUploadedFile(Model model) {
+    public String listUploadedPdfFile(Model model) {
         model.addAttribute("files", storageService.loadAll().map(
                 path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
-                        "serveFile", path.getFileName().toString()).build().toString()).filter(f -> f.endsWith(".pdf"))
+                        "serveFile", path.getFileName().toString())
+                        .build().toString())
+                .filter(f -> f.endsWith(".pdf"))
+                .limit(1)
                 .collect(Collectors.toList()));
 
         return "pageviewer";
@@ -51,15 +54,17 @@ public class FileUploadController {
     }
 
     @PostMapping("/")
-    public String handleFileUpload(@RequestParam("file") MultipartFile file,
+    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile,
                                    RedirectAttributes redirectAttributes) {
-        storageService.store(file);
-        redirectAttributes.addFlashAttribute("message",
-                "You successfully uploaded " + file.getOriginalFilename() + "!");
-        boolean wrongExtension = fileProcessingService.processUploadedFile(file);
+        storageService.store(multipartFile);
 
+        boolean wrongExtension = fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename());
         if (wrongExtension) {
-            redirectAttributes.addFlashAttribute("message", "You have uploaded the file with a wrong file extension.");
+            redirectAttributes.addFlashAttribute("message",
+                    "You have uploaded the file with a wrong file extension.");
+        } else {
+            redirectAttributes.addFlashAttribute("message",
+                    "You successfully uploaded " + multipartFile.getOriginalFilename() + "!");
         }
         return "redirect:/";
     }

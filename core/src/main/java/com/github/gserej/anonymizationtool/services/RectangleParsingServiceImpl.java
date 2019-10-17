@@ -17,7 +17,9 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
     }
 
     @Override
-    public List<RectangleBox> parseRectangleBoxList(List<RectangleBox> rectangleBoxList) {
+    public List<RectangleBox> parseRectangleBoxList() {
+
+        List<RectangleBox> rectangleBoxList = RectangleBoxLists.getRectangleBoxListOriginal();
 
         for (RectangleBox rectangleBox : rectangleBoxList) {
             String word = rectangleBox.getWord();
@@ -40,8 +42,7 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
         return RectangleBoxLists.rectangleBoxListParsed;
     }
 
-    @Override
-    public void addRectangleToNewList(RectangleBox rectangleBox) {
+    private void addRectangleToNewList(RectangleBox rectangleBox) {
         if (!RectangleBoxLists.rectangleBoxListParsed.contains(rectangleBox)) {
             RectangleBoxLists.rectangleBoxListParsed.add(rectangleBox);
         }

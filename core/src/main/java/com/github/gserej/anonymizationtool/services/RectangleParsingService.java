@@ -6,8 +6,6 @@ import java.util.List;
 
 public interface RectangleParsingService {
 
-    List<RectangleBox> parseRectangleBoxList(List<RectangleBox> rectangleBoxList);
-
-    void addRectangleToNewList(RectangleBox rectangleBox);
+    List<RectangleBox> parseRectangleBoxList();
 
 }

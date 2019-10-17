@@ -17,6 +17,7 @@
 package com.github.gserej.anonymizationtool.services;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
+import com.github.gserej.anonymizationtool.model.EmbeddedImageProperties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,9 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -65,7 +64,8 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
         this.ocrService = ocrService;
     }
 
-    private ImageLocationsExtractionServiceImpl() {
+
+    private void init() {
         addOperator(new Concatenate());
         addOperator(new DrawObject());
         addOperator(new SetGraphicsStateParameters());
@@ -75,19 +75,18 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
     }
 
 
-    // Takes a PDF file, extracts images from it and calls TesseractOCR.doOcrOnMultipleFiles() on them
     @Override
     public void extractImages(File file) throws IOException {
 
         try (PDDocument document = PDDocument.load(file)) {
-            ImageLocationsExtractionServiceImpl printer = new ImageLocationsExtractionServiceImpl();
+            init();
             //noinspection ResultOfMethodCallIgnored
             new File(rootLocation + "/extractedImages").mkdirs();
             pageNum = 1;
             for (PDPage page : document.getPages()) {
                 setPageNum(pageNum);
                 setPageHeight(page.getMediaBox().getHeight());
-                printer.processPage(page);
+                processPage(page);
                 pageNum++;
             }
         }
@@ -112,16 +111,16 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
                 float imageXScale = ctmNew.getScalingFactorX();
                 float imageYScale = ctmNew.getScalingFactorY();
 
-                Map<String, Float> imagePositionAndSize = new HashMap<>();
-                imagePositionAndSize.put("Position X", ctmNew.getTranslateX());
-                imagePositionAndSize.put("Position Y", ctmNew.getTranslateY());
-                imagePositionAndSize.put("Size X", imageXScale);
-                imagePositionAndSize.put("Size Y", imageYScale);
-                imagePositionAndSize.put("page", (float) getPageNum());
-                imagePositionAndSize.put("page Height", getPageHeight());
-                log.info("do image exist" + imgFile.exists() + "  do imagePositions exists " + imagePositionAndSize);
-                ocrService.doOcrOnMultipleFiles(imgFile, imagePositionAndSize);
-                imagePositionAndSize.clear();
+                EmbeddedImageProperties embeddedImageProperties = new EmbeddedImageProperties(
+                        ctmNew.getTranslateX(),
+                        ctmNew.getTranslateY(),
+                        imageXScale,
+                        imageYScale,
+                        getPageNum(),
+                        getPageHeight());
+
+                ocrService.doOcrOnEmbeddedImageFiles(imgFile, embeddedImageProperties);
+
             } else if (xobject instanceof PDFormXObject) {
                 PDFormXObject form = (PDFormXObject) xobject;
                 showForm(form);

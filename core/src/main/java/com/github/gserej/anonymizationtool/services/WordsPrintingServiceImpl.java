@@ -16,9 +16,9 @@
  */
 package com.github.gserej.anonymizationtool.services;
 
-import com.github.gserej.anonymizationtool.model.RectangleBox;
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
-import com.github.gserej.anonymizationtool.filestorage.StorageService;
+import com.github.gserej.anonymizationtool.filestorage.TemporaryImageList;
+import com.github.gserej.anonymizationtool.model.RectangleBox;
 import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -49,17 +48,15 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class WordsPrinterDrawer extends PDFTextStripper {
+public class WordsPrintingServiceImpl extends PDFTextStripper implements WordsPrintingService {
     private static final int SCALE = 8;
 
-    private static List<String> tempImagesList = new ArrayList<>();
     private static String filename;
     private static PDDocument document;
     private AffineTransform flipAT;
-    private AffineTransform rotateAT;
     private Graphics2D g2d;
     private static Path rootLocation;
-    private static StorageService storageService;
+
 
     @Setter
     @Getter
@@ -70,42 +67,44 @@ public class WordsPrinterDrawer extends PDFTextStripper {
     private static boolean readyToDraw;
 
     @Autowired
-    public WordsPrinterDrawer(StorageProperties properties, StorageService storageService) throws IOException {
+    public WordsPrintingServiceImpl(StorageProperties properties) throws IOException {
         rootLocation = Paths.get(properties.getLocation());
-        WordsPrinterDrawer.storageService = storageService;
     }
 
-    private WordsPrinterDrawer(PDDocument document, String filename) throws IOException {
-        WordsPrinterDrawer.document = document;
-        WordsPrinterDrawer.filename = filename;
-    }
-
-    public static void printLocations(File file) throws IOException {
-        try (PDDocument document = PDDocument.load(file)) {
-            setReadyToDraw(false);
-            setUpStripper(file, document);
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void drawLocations(File file) throws IOException {
-        try (PDDocument document = PDDocument.load(file)) {
-            setReadyToDraw(true);
-            setUpStripper(file, document);
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
+    private WordsPrintingServiceImpl(PDDocument document, String filename) throws IOException {
+        WordsPrintingServiceImpl.document = document;
+        WordsPrintingServiceImpl.filename = filename;
     }
 
     private static void setUpStripper(File file, PDDocument document) throws IOException {
-        WordsPrinterDrawer stripper = new WordsPrinterDrawer(document, file.getName());
+        WordsPrintingServiceImpl stripper = new WordsPrintingServiceImpl(document, file.getName());
         stripper.setSortByPosition(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             setPageNumber(page + 1);
             stripper.stripPage(page);
         }
-        MarkedRectanglesProcessingServiceImpl.setTempImagesList(tempImagesList);
+    }
+
+    @Override
+    public void getWordsLocations(File file) throws IOException {
+        try (PDDocument document = PDDocument.load(file)) {
+            setReadyToDraw(false);
+            setUpStripper(file, document);
+        } catch (NullPointerException e) {
+            log.error("Null pointer exception loading PDF file " + e);
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void drawBoxesAroundMarkedWords(File file) throws IOException {
+        try (PDDocument document = PDDocument.load(file)) {
+            setReadyToDraw(true);
+            setUpStripper(file, document);
+
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
     }
 
     private void stripPage(int page) throws IOException {
@@ -114,32 +113,9 @@ public class WordsPrinterDrawer extends PDFTextStripper {
 
         PDPage pdPage = document.getPage(page);
 
-        // flip y-axis
         flipAT = new AffineTransform();
         flipAT.translate(0, pdPage.getBBox().getHeight());
         flipAT.scale(1, -1);
-
-        // page may be rotated
-        rotateAT = new AffineTransform();
-        int rotation = pdPage.getRotation();
-        if (rotation != 0) {
-            PDRectangle mediaBox = pdPage.getMediaBox();
-            switch (rotation) {
-                case 90:
-                    rotateAT.translate(mediaBox.getHeight(), 0);
-                    break;
-                case 270:
-                    rotateAT.translate(0, mediaBox.getWidth());
-                    break;
-                case 180:
-                    rotateAT.translate(mediaBox.getWidth(), mediaBox.getHeight());
-                    break;
-                default:
-                    break;
-            }
-            rotateAT.rotate(Math.toRadians(rotation));
-        }
-
         g2d = image.createGraphics();
         g2d.setStroke(new BasicStroke(0.1f));
         g2d.scale(SCALE, SCALE);
@@ -152,8 +128,6 @@ public class WordsPrinterDrawer extends PDFTextStripper {
 
         if (readyToDraw) {
             drawWordImage(page + 1);
-        }
-        if (readyToDraw) {
             String imageFilename = filename;
             int pt = imageFilename.lastIndexOf('.');
             imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
@@ -161,9 +135,8 @@ public class WordsPrinterDrawer extends PDFTextStripper {
                 log.error("couldn't create /tempImages/ folder");
             File file = new File(rootLocation + "/tempImages/" + imageFilename);
             ImageIO.write(image, "png", file);
+            TemporaryImageList.tempImagesList.add(file.getName());
 
-            tempImagesList.add(file.getName());
-            storageService.storeAsFile(file);
         }
         g2d.dispose();
     }
@@ -179,7 +152,6 @@ public class WordsPrinterDrawer extends PDFTextStripper {
                         RectangleBoxLists.rectangleBoxListMarked.get(i).getH());
 
                 Shape s = at.createTransformedShape(rect);
-                s = rotateAT.createTransformedShape(s);
                 g2d.setColor(Color.black);
                 g2d.fill(s);
             }
@@ -223,8 +195,6 @@ public class WordsPrinterDrawer extends PDFTextStripper {
         String singleWord = builder.toString();
         AffineTransform at = text.getTextMatrix().createAffineTransform();
 
-
-        // in blue:
         Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f,
                 xadvance, bbox.getHeight() * 0.85f);
         if (font instanceof PDType3Font) {
@@ -236,9 +206,9 @@ public class WordsPrinterDrawer extends PDFTextStripper {
         }
         Shape s = at.createTransformedShape(rect);
         s = flipAT.createTransformedShape(s);
-        s = rotateAT.createTransformedShape(s);
 
         RectangleBox rectangleBox = new RectangleBox(false,
+                false,
                 (float) s.getBounds2D().getX(),
                 (float) s.getBounds2D().getY(),
                 (float) s.getBounds2D().getWidth(),

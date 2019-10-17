@@ -54,8 +54,6 @@ pdf_next.on('click', function () {
     }
 });
 
-disableEnablePrevNext();
-
 function disableEnablePrevNext() {
     if (PAGE_TO_VIEW === 1) {
         pdf_prev.prop("disabled", true);
@@ -68,6 +66,9 @@ function disableEnablePrevNext() {
         pdf_next.prop("disabled", false);
     }
 }
+
+disableEnablePrevNext();
+
 
 var loadingTask = pdfjsLib.getDocument({
     url: DEFAULT_URL,
@@ -87,6 +88,7 @@ $(document).ready(
             }
         );
     });
+var rects = [];
 
 function render() {
     $(".page").remove();
@@ -114,8 +116,14 @@ function render() {
                 pdf_next.prop("disabled", false);
             }
 
+            for (var i in rects) {
+                if (rects.hasOwnProperty(i)) {
+                    rects[i].drew = false;
+                }
+            }
+
             startAjaxGet();
-            
+
             return pdfPageView.draw();
         })
     });
@@ -129,27 +137,37 @@ var startAjaxGet = (function () {
     return function () {
         if (!executed) {
             executed = true;
-            ajaxGet()
+            getRectangles();
         }
     };
 })();
 
-function ajaxGet() {
+function hasId(prop, value, data) {
+    return data.some(function (obj) {
+        return prop in obj && obj[prop] === value;
+    });
+}
+
+function getRectangles() {
     $.ajax({
         type: "get",
-        url: "/additionalRects",
+        url: "/originalrectangles",
         contentType: 'application/json',
         success: function (data) {
             if (!$.trim(data)) {
-                console.log("Empty rectangle list, trying again in 1 second.");
+                console.log("No new data, trying again in 1 second.");
                 setTimeout(function () {
-                    ajaxGet();
+                    getRectangles();
                 }, 1000)
             } else {
                 var additionalRectListJS = JSON.stringify(data);
                 for (var o in data) {
                     if (data.hasOwnProperty(o)) {
-                        rects.push(data[o]);
+                        if (!hasId('id', data[o].id, rects)) {
+
+                            rects.push(data[o]);
+                            console.log("Object pushed: " + JSON.stringify(data[o]));
+                        }
                     }
                 }
                 console.log("Received following rectangle list: " + additionalRectListJS);
@@ -158,11 +176,12 @@ function ajaxGet() {
         error: function () {
             console.log("Fail, trying again in 1 second.");
             setTimeout(function () {
-                ajaxGet();
-            }, 2000)
+                getRectangles();
+            }, 1000)
         }
     });
 }
+
 $("#do-refactor").on('click', function () {
 
     var filteredRects = rects.filter(function (e) {
@@ -189,6 +208,8 @@ function drawRedRec(x, y, w, h, rectNum) {
     ctx.beginPath();
     ctx.rect(SCALE_FIXED * x, SCALE_FIXED * y, SCALE_FIXED * w, SCALE_FIXED * h);
     ctx.stroke();
+    rects[rectNum].drew = true;
+    console.log("Red rectangle has been drawn: " + rectNum);
 }
 
 function drawBlackRec(x, y, w, h, rectNum) {
@@ -203,63 +224,82 @@ function drawBlackRec(x, y, w, h, rectNum) {
     ctx.fill();
 }
 
+$("#getMoreBoxes").on('click', function () {
+    getRectangles();
+});
+
 function removeRec(rectNum) {
     $("#pageContainer > div > div.canvasWrapper > canvas[id=rect" + rectNum + "]:first").remove();
 }
 
-var rects = [];
+function drawAllBlack() {
+    for (var i = 0, len = rects.length; i < len; i++) {
+        if (rects[i].page === PAGE_TO_VIEW) {
+            if (rects[i].marked === true) {
+                if (rects[i].drew === false) {
+                    drawBlackRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                }
+            }
+        }
+    }
+}
 
-$("#draw").on('click', function () {
+function drawAllRed() {
+    for (var i = 0, len = rects.length; i < len; i++) {
+        if (rects[i].page === PAGE_TO_VIEW) {
+            if (rects[i].marked === false) {
+                if (rects[i].drew === false) {
+                    if ($("input[value='PESEL']").is(":checked")) {
+                        if (rects[i].typeOfData === 2) {
+                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        }
+                    }
+                    if ($("input[value='NIP']").is(":checked")) {
+                        if (rects[i].typeOfData === 3) {
+                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        }
+                    }
+                    if ($("input[value='REGON']").is(":checked")) {
+                        if (rects[i].typeOfData === 4) {
+                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        }
+                    }
+                    if ($("input[value='Name']").is(":checked")) {
+                        if (rects[i].typeOfData === 5) {
+                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        }
+                    }
+                    if ($("input[value='Phone_Number']").is(":checked")) {
+                        if (rects[i].typeOfData === 6) {
+                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        }
+                    }
+                    if ($("input[value='Address']").is(":checked")) {
+                        if (rects[i].typeOfData === 7) {
+                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        }
+                    }
+                    if ($("input[value='date']").is(":checked")) {
+                        if (rects[i].typeOfData === 8) {
+                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        }
+                    }
+                    if (rects[i].typeOfData === 1) {
+                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    }
+
+                }
+            }
+        }
+    }
+}
+
+$("#draw").on('click', function drawRects() {
 
     var c_page = $("canvas[id^=page]");
     var rectNum = -1;
 
-    function drawAllRed() {
-        for (var i = 0, len = rects.length; i < len; i++) {
-            if (rects[i].page === PAGE_TO_VIEW) {
-                if ($("input[value='PESEL']").is(":checked")) {
-                    if (rects[i].typeOfData === 2) {
-                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
-                    }
-                }
-                if ($("input[value='NIP']").is(":checked")) {
-                    if (rects[i].typeOfData === 3) {
-                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
-                    }
-                }
-                if ($("input[value='REGON']").is(":checked")) {
-                    if (rects[i].typeOfData === 4) {
-                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
-                    }
-                }
-                if ($("input[value='Name']").is(":checked")) {
-                    if (rects[i].typeOfData === 5) {
-                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
-                    }
-                }
-                if ($("input[value='Phone_Number']").is(":checked")) {
-                    if (rects[i].typeOfData === 6) {
-                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
-                    }
-                }
-                if ($("input[value='Address']").is(":checked")) {
-                    if (rects[i].typeOfData === 7) {
-                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
-                    }
-                }
-                if ($("input[value='date']").is(":checked")) {
-                    if (rects[i].typeOfData === 8) {
-                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
-                    }
-                }
-                if (rects[i].typeOfData === 1) {
-                    drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
-                }
-
-            }
-        }
-    }
-
+    drawAllBlack();
     drawAllRed();
     var BB, BBoffsetX, BBoffsetY;
 
@@ -287,7 +327,6 @@ $("#draw").on('click', function () {
         }
         return isCollision;
     }
-
 
     $('.textLayer').click(function (e) {
         $('.textLayer').hide();

@@ -1,66 +1,61 @@
 package com.github.gserej.anonymizationtool.services;
 
-import com.github.gserej.anonymizationtool.model.RectangleBox;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import com.github.gserej.anonymizationtool.filestorage.TempName;
+import com.github.gserej.anonymizationtool.filestorage.TemporaryImageList;
+import com.github.gserej.anonymizationtool.model.RectangleBox;
 import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Service
 public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesProcessingService {
 
-    @Getter
-    @Setter
-    private static List<String> tempImagesList;
-    @Autowired
-    private StorageService storageService;
-    @Autowired
-    private TempName tempName;
-    private ImageToPdfConversionService imageToPdfConversionService;
 
-    public MarkedRectanglesProcessingServiceImpl(ImageToPdfConversionService imageToPdfConversionService) {
+    private final StorageService storageService;
+    private final TempName tempName;
+    private ImageToPdfConversionService imageToPdfConversionService;
+    private WordsPrintingService wordsPrintingService;
+
+
+    public MarkedRectanglesProcessingServiceImpl(ImageToPdfConversionService imageToPdfConversionService, WordsPrintingService wordsPrintingService, StorageService storageService, TempName tempName) {
         this.imageToPdfConversionService = imageToPdfConversionService;
+        this.wordsPrintingService = wordsPrintingService;
+        this.storageService = storageService;
+        this.tempName = tempName;
     }
 
 
     @Override
     public void processReceivedRectangleList(List<RectangleBox> rectangleBoxesMarked) {
 
+        log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
         RectangleBoxLists.setRectangleBoxListMarked(rectangleBoxesMarked);
 
-        log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
-
-        File fileToProcess = storageService.loadAsFile(tempName.getTempFileName());
-        log.info(fileToProcess.getName());
+        File pdfFileToProcess = storageService.loadAsFile(tempName.getTempFileName());
+        log.info("Loaded PDF file: " + pdfFileToProcess.getName());
 
         try {
-            WordsPrinterDrawer.drawLocations(fileToProcess);
+            wordsPrintingService.drawBoxesAroundMarkedWords(pdfFileToProcess);
+        } catch (IOException e) {
+            log.error("Error drawing boxes around words" + e);
+        }
+        try {
+            log.info("List of images: " + TemporaryImageList.getTempImagesList().toString());
+            String pathToProcessedPdf = imageToPdfConversionService.createPdfFromMultipleImages(
+                    tempName.getTempFileName(), pdfFileToProcess);
 
-            log.info(tempImagesList.toString());
-            List<File> imageFilesList = new ArrayList<>();
-            for (String s : tempImagesList) {
-                imageFilesList.add(storageService.loadAsFile(s));
-            }
-
-            String pathToDonePdf = imageToPdfConversionService.createPdfFromMultipleImages(imageFilesList,
-                    tempName.getTempFileName(), fileToProcess);
-            storageService.storeAsFile(new File(pathToDonePdf));
+            storageService.storeAsFile(new File(pathToProcessedPdf));
+            log.info("Document ready to download.");
+        } catch (IOException e) {
+            log.error("Error creating PDF file from images.");
+        } finally {
             tempName.setTempFileName(null);
-        } catch (
-                IOException e) {
-            log.error("Error processing file" + e);
         }
     }
-
-
 }

@@ -80,7 +80,6 @@ public class FileSystemStorageService implements StorageService {
         return rootLocation.resolve(filename);
     }
 
-
     @Override
     public File loadAsFile(String filename) {
         Path file = rootLocation.resolve(filename);

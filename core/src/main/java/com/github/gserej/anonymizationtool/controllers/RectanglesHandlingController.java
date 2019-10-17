@@ -1,6 +1,5 @@
 package com.github.gserej.anonymizationtool.controllers;
 
-
 import com.github.gserej.anonymizationtool.model.RectangleBox;
 import com.github.gserej.anonymizationtool.services.MarkedRectanglesProcessingService;
 import lombok.Getter;
@@ -42,17 +41,10 @@ public class RectanglesHandlingController {
         return "redirect:/";
     }
 
-    @GetMapping("/additionalRects")
+    @GetMapping(value = {"/originalrectangles", "/additionalrectangles"})
     @ResponseBody
-    public Object sendAdditionalRects() {
+    public Object sendRectangles() {
         return getRectObject();
     }
-
-    @GetMapping("/originalRects")
-    @ResponseBody
-    public Object sendOriginalRects() {
-        return getRectObject();
-    }
-
 
 }

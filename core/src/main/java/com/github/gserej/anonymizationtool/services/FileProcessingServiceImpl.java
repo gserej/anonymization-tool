@@ -7,20 +7,15 @@ import com.github.gserej.anonymizationtool.model.Ratio;
 import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 @Service
 @Slf4j
 public class FileProcessingServiceImpl implements FileProcessingService {
-
 
     private StorageService storageService;
     private TempName tempName;
@@ -29,13 +24,14 @@ public class FileProcessingServiceImpl implements FileProcessingService {
     private RectangleParsingService rectangleParsingService;
     private ImageLocationsExtractionService imageLocationsExtractionService;
     private RectanglesHandlingController rectanglesHandlingController;
+    private WordsPrintingService wordsPrintingService;
 
     @Autowired
     public FileProcessingServiceImpl(StorageService storageService, TempName tempName, OCRService ocrService,
                                      ImageToPdfConversionService imageToPdfConversionService,
                                      RectangleParsingService rectangleParsingService,
                                      ImageLocationsExtractionService imageLocationsExtractionService,
-                                     RectanglesHandlingController rectanglesHandlingController) {
+                                     RectanglesHandlingController rectanglesHandlingController, WordsPrintingService wordsPrintingService) {
         this.storageService = storageService;
         this.tempName = tempName;
         this.ocrService = ocrService;
@@ -43,66 +39,69 @@ public class FileProcessingServiceImpl implements FileProcessingService {
         this.rectangleParsingService = rectangleParsingService;
         this.imageLocationsExtractionService = imageLocationsExtractionService;
         this.rectanglesHandlingController = rectanglesHandlingController;
+        this.wordsPrintingService = wordsPrintingService;
     }
 
     @Override
-    public boolean processUploadedFile(MultipartFile file) {
-        File fileToProcess = storageService.loadAsFile(file.getOriginalFilename());
-        String fileExtension = FilenameUtils.getExtension(fileToProcess.getName());
+    public boolean processUploadedFile(String filename) {
+        File fileToProcess = storageService.loadAsFile(filename);
+        String fileExtension = FilenameUtils.getExtension(filename);
 
         if (fileExtension.equalsIgnoreCase("pdf")) {
-            log.info("pdf file found");
-            processPdfFile(fileToProcess, file);
+            log.info("PDF file found!");
+            tempName.setTempFileName(filename);
+            processPdfFile(fileToProcess);
             return false;
         } else if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("png")) {
-            log.info("image file found");
+            log.info("Image file found!");
             processImageFile(fileToProcess);
             return false;
         } else {
-            log.info("file with a wrong extension found");
+            log.info("File with a wrong extension found!");
             return true;
         }
     }
 
     @Override
-    public void processPdfFile(File fileToProcess, MultipartFile file) {
-        tempName.setTempFileName(file.getOriginalFilename());
-        try {
-            WordsPrinterDrawer.printLocations(fileToProcess);
-            rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
-            log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
-            Runnable r = () -> {
-                try {
-                    imageLocationsExtractionService.extractImages(fileToProcess);
-                    rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
-                    log.info("Additional rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            };
-            new Thread(r).start();
+    public void processPdfFile(File fileToProcess) {
 
+        try {
+            wordsPrintingService.getWordsLocations(fileToProcess);
         } catch (IOException e) {
-            log.error("Error processing PDF file: " + e);
+            log.error("Exception: getting words locations from PDF failed.");
         }
+        rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList());
+        log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+
+        Runnable r = () -> {
+            log.info("Trying to find images embedded in PDF file: starting...");
+            try {
+                imageLocationsExtractionService.extractImages(fileToProcess);
+                rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList());
+                log.info("Additional rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
+        new Thread(r).start();
+
     }
+
 
 
     @Override
     public void processImageFile(File fileToProcess) {
         try {
             File imagePdfFile = imageToPdfConversionService.createPdfFromSingleImage(fileToProcess, fileToProcess.getName());
-            MultipartFile multipartFile = new MockMultipartFile(imagePdfFile.getName(),
-                    imagePdfFile.getName(), "text/plain", IOUtils.toByteArray(new FileInputStream(imagePdfFile)));
-            storageService.store(multipartFile);
-            tempName.setTempFileName(multipartFile.getOriginalFilename());
+            tempName.setTempFileName(imagePdfFile.getName());
+            storageService.storeAsFile(imagePdfFile);
 
             Runnable r = () -> {
                 log.info("OCR processing: starting...");
-                boolean ocrSuccessful = ocrService.doOcrOnSingleFile(fileToProcess, Ratio.getRatio());
+                boolean ocrSuccessful = ocrService.doOcrOnSingleImageFile(fileToProcess, Ratio.getRatio());
                 if (ocrSuccessful) {
                     log.info("OCR processing: done");
-                    rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal()));
+                    rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList());
                     log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
                 } else {
                     log.error("OCR processing: fail");
