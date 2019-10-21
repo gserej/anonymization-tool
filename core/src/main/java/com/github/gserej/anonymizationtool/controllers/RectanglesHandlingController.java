@@ -6,17 +6,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
 @Slf4j
-@Controller
+@RestController
 public class RectanglesHandlingController {
 
     @Getter
@@ -42,7 +38,6 @@ public class RectanglesHandlingController {
     }
 
     @GetMapping(value = {"/originalrectangles", "/additionalrectangles"})
-    @ResponseBody
     public Object sendRectangles() {
         return getRectObject();
     }
