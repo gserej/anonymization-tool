@@ -23,14 +23,17 @@ limitations under the License.
     <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
     <meta content="notranslate" name="google">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link href="pdfjs-dist/web/pdf_viewer.css" rel="stylesheet">
+    <script src="pdfjs-dist/build/pdf.js"></script>
+    <script src="pdfjs-dist/web/pdf_viewer.js"></script>
+
+
     <title>Anonymization tool</title>
 
     <style>
-        body {
-            background-color: #AAAAAA;
-            padding-left: 3%;
-            padding-right: 3%;
-        }
 
         div#pageContainer {
             display: inline-block;
@@ -41,95 +44,147 @@ limitations under the License.
             vertical-align: top
         }
 
+        .jumbotron {
+            padding: 5px;
+        }
+
+        html {
+            position: relative;
+            min-height: 100%;
+        }
+
+        body {
+            margin-bottom: 20px; /* Margin bottom by footer height */
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px; /* Set the fixed height of the footer here */
+            line-height: 20px; /* Vertically center the text there */
+        }
+
+
+
     </style>
-
-    <link href="pdfjs-dist/web/pdf_viewer.css" rel="stylesheet">
-    <script src="pdfjs-dist/build/pdf.js"></script>
-    <script src="pdfjs-dist/web/pdf_viewer.js"></script>
-
 </head>
 
-<body tabindex="1">
-<div id="welcome-screen">
-    <h1>Anonymization tool</h1>
-    <h2>Please upload the PDF, JPG or PNG file.</h2>
-</div>
 
+<body class="h-100" tabindex="1">
+<div class="container-fluid">
+    <div class="jumbotron">
+        <div id="welcome-screen">
+            <h3>Anonymization tool</h3>
+            <h5>Please upload the PDF, JPG or PNG file.</h5>
+        </div>
+        <div id="upload-form">
+            <form action="/" enctype="multipart/form-data" method="POST">
+                <input class="btn btn-primary" disabled type="submit" value="Upload"/>
+                <div class="custom-file col-md-4 col-sm-6">
+                    <input accept="application/pdf, image/jpeg, image/png" class="custom-file-input" id="customFile"
+                           name="file"
+                           type="file">
+                    <label class="custom-file-label" for="customFile">Choose file</label>
+                </div>
+                <br>
 
-<!--/*@thymesVar id="message" type=""*/-->
-<div th:if="${message}">
-    <h3 th:text="${message}"></h3>
-    <!--/*@thymesVar id="fileReadyMessage" type=""*/-->
-    <div th:if="${fileReadyMessage}">
-        <h3 th:text="${fileReadyMessage}"></h3>
-    </div>
-</div>
+            </form>
+        </div>
 
-<div>
-    <ul>
-        <li th:each="file : ${files}">
-            <a th:href="${file}" th:text="${file}"></a>
-        </li>
-    </ul>
-</div>
-
-<div id="upload-form">
-    <form action="/" enctype="multipart/form-data" method="POST">
-        <table>
-            <tr>
-                <td>File to upload:</td>
-                <td><input accept="application/pdf, image/jpeg, image/png" name="file" type="file"/></td>
-                <td><input disabled type="submit" value="Upload"/></td>
-            </tr>
-        </table>
-    </form>
-</div>
-
-<div id="pdf-meta">
-    <div id="pdf-buttons">
-        <button id="pdf-prev">Previous</button>
-        <button id="pdf-next">Next</button>
-        <button id="do-refactor">Do anonymization</button>
-        <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+        <!--/*@thymesVar id="message" type=""*/-->
+        <div th:if="${message}">
+            <h3 th:text="${message}"></h3>
+            <!--/*@thymesVar id="fileReadyMessage" type=""*/-->
+            <div th:if="${fileReadyMessage}">
+                <h3 th:text="${fileReadyMessage}"></h3>
+            </div>
+        </div>
+        <div id="files-list">
+            <ul>
+                <li th:each="file : ${files}">
+                    <a th:href="${file}" th:text="${file}"></a>
+                </li>
+            </ul>
+        </div>
     </div>
 
+    <div id="pdf-meta">
+        <div id="pdf-buttons">
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" id="pdf-prev">Previous page</button>
+                <button class="btn btn-outline-primary" id="pdf-next">Next page</button>
+            </div>
+            <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+            <button class="btn btn-outline-primary btn-sm" id="do-refactor">Do anonymization</button>
+        </div>
 
-</div>
-
-<div id="pdf-section">
-    <div class="pdfViewer singlePageView" id="pageContainer"></div>
-    <div id="data-types">
-        <button id="getMoreBoxes">Get More boxes</button>
-        <button id="draw">Show Boxes</button>
-        <br>
-        <label>
-            <input checked name="data-type2" type="checkbox" value="PESEL">
-        </label>PESEL numbers<br>
-        <label>
-            <input checked name="data-type3" type="checkbox" value="NIP">
-        </label>NIP numbers<br>
-        <label>
-            <input checked name="data-type4" type="checkbox" value="REGON">
-        </label>REGON numbers<br>
-        <label>
-            <input checked name="data-type5" type="checkbox" value="Name">
-        </label>First and last names<br>
-        <label>
-            <input checked name="data-type6" type="checkbox" value="Phone_Number">
-        </label>Phone numbers<br>
-        <label>
-            <input checked name="data-type7" type="checkbox" value="Address">
-        </label>Addresses<br>
-        <label>
-            <input checked name="data-type8" type="checkbox" value="Date">
-        </label>Dates<br>
     </div>
+
+    <div id="pdf-section">
+        <div class="pdfViewer singlePageView border" id="pageContainer"></div>
+        <div class="border" id="data-types">
+            <button class="btn btn-outline-primary btn-sm" id="getMoreBoxes">Get More boxes</button>
+            <button class="btn btn-outline-primary btn-sm" id="draw">Show Boxes</button>
+            <br>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input checked class="form-check-input" name="data-type2" type="checkbox" value="PESEL">PESEL
+                    numbers
+                </label>
+            </div>
+
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input checked class="form-check-input" name="data-type3" type="checkbox" value="NIP">NIP numbers
+                </label>
+            </div>
+
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input checked class="form-check-input" name="data-type4" type="checkbox" value="REGON">REGON
+                    numbers
+                </label>
+            </div>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input checked class="form-check-input" name="data-type5" type="checkbox" value="Name">First and
+                    last names
+                </label>
+            </div>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input checked class="form-check-input" name="data-type6" type="checkbox" value="Phone_Number">Phone
+                    numbers
+                </label>
+            </div>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input checked class="form-check-input" name="data-type7" type="checkbox" value="Address">Addresses
+                </label>
+            </div>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input checked class="form-check-input" name="data-type8" type="checkbox" value="Date">Dates
+                </label>
+            </div>
+        </div>
+    </div>
+
+
 </div>
+
+<footer class="footer bg-secondary">
+    <div class="container ">
+        <span class="text-white small">Anonymization tool. Created by Grzegorz Serej.
+            <a class="text-info" href="https://github.com/gserej/anonymization-tool">Source code.</a>
+        </span>
+    </div>
+</footer>
 
 <script th:inline="javascript">
     var DEFAULT_URL = [[${files}]];
 </script>
-
 <script src="pageviewer.js"></script>
 
 </body>

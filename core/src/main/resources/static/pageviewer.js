@@ -110,6 +110,7 @@ function render() {
             $("#welcome-screen").hide();
             $("#pdf-meta").show();
             $("#data-types").show();
+            $("#files-list").show();
             if (PAGE_TO_VIEW === number_of_pages) {
                 pdf_next.prop("disabled", true);
             } else {
