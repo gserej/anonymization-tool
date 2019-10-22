@@ -11,9 +11,12 @@ import java.util.List;
 public class RectangleParsingServiceImpl implements RectangleParsingService {
 
     private NumberTypeValidationService numberTypeValidationService;
+    private CsvExtractionService csvExtractionService;
 
-    public RectangleParsingServiceImpl(NumberTypeValidationService numberTypeValidationService) {
+    public RectangleParsingServiceImpl(NumberTypeValidationService numberTypeValidationService,
+                                       CsvExtractionService csvExtractionService) {
         this.numberTypeValidationService = numberTypeValidationService;
+        this.csvExtractionService = csvExtractionService;
     }
 
     @Override
@@ -34,6 +37,9 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
                 addRectangleToNewList(rectangleBox);
             } else if (GenericValidator.isDate(word, null)) {
                 rectangleBox.setTypeOfData(8);
+                addRectangleToNewList(rectangleBox);
+            } else if (csvExtractionService.isPolishFirstOrLastName(word)) {
+                rectangleBox.setTypeOfData(5);
                 addRectangleToNewList(rectangleBox);
             } else if (word.equalsIgnoreCase("Lorem")) {
                 addRectangleToNewList(rectangleBox);
