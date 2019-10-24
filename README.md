@@ -1,5 +1,7 @@
 # Anonimization Tool
 
+[![CircleCI](https://circleci.com/gh/gserej/anonymization-tool.svg?style=svg)](https://circleci.com/gh/gserej/anonymization-tool)
+
 A Spring Boot based application created to help users to speed up the process of document redaction.
 
 When the user upload either a PDF or an image file, content of the document is displayed on the main page and meanwhile
