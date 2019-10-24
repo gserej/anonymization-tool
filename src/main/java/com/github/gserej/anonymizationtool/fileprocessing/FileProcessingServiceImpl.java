@@ -1,11 +1,16 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.fileprocessing;
 
-import com.github.gserej.anonymizationtool.controllers.RectanglesHandlingController;
 import com.github.gserej.anonymizationtool.datatype.RectangleParsingService;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import com.github.gserej.anonymizationtool.filestorage.TempName;
-import com.github.gserej.anonymizationtool.model.Ratio;
-import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
+import com.github.gserej.anonymizationtool.imageprocessing.ImageLocationsExtractionService;
+import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
+import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
+import com.github.gserej.anonymizationtool.imageprocessing.model.Ratio;
+import com.github.gserej.anonymizationtool.rectangles.RectanglesHandlingController;
+import com.github.gserej.anonymizationtool.rectangles.WordsPrintingService;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBoxLists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -71,23 +77,26 @@ public class FileProcessingServiceImpl implements FileProcessingService {
         } catch (IOException e) {
             log.error("Exception: getting words locations from PDF failed.");
         }
-        rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList());
-        log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+        List<RectangleBox> temporaryListFromPdf = rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
+        rectanglesHandlingController.setRectObject(temporaryListFromPdf);
+
+        log.info("Rectangles extracted from text to be sent to the page: " + temporaryListFromPdf.toString());
 
         Runnable r = () -> {
             log.info("Trying to find images embedded in PDF file: starting...");
             try {
                 imageLocationsExtractionService.extractImages(fileToProcess);
-                rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList());
-                log.info("Additional rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+
+                List<RectangleBox> temporaryListFromImage = rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
+                rectanglesHandlingController.setRectObject(temporaryListFromImage);
+
+                log.info("Additional rectangles extracted from image(s) to be sent sent to the page: " + temporaryListFromImage.toString());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         };
         new Thread(r).start();
-
     }
-
 
 
     @Override
@@ -102,8 +111,9 @@ public class FileProcessingServiceImpl implements FileProcessingService {
                 boolean ocrSuccessful = ocrService.doOcrOnSingleImageFile(fileToProcess, Ratio.getRatio());
                 if (ocrSuccessful) {
                     log.info("OCR processing: done");
-                    rectanglesHandlingController.setRectObject(rectangleParsingService.parseRectangleBoxList());
-                    log.info("Rectangles sent to the page: " + RectangleBoxLists.getRectangleBoxListParsed().toString());
+                    List<RectangleBox> temporaryList = rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
+                    rectanglesHandlingController.setRectObject(temporaryList);
+                    log.info("Rectangles extracted from single image to be sent to the page: " + temporaryList.toString());
                 } else {
                     log.error("OCR processing: fail");
                 }

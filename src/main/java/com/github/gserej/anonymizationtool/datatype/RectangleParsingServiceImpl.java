@@ -1,10 +1,10 @@
 package com.github.gserej.anonymizationtool.datatype;
 
-import com.github.gserej.anonymizationtool.model.RectangleBox;
-import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 import org.apache.commons.validator.GenericValidator;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,16 +19,15 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
                                        PhoneNumberValidationService phoneNumberValidationService) {
         this.numberTypeValidationService = numberTypeValidationService;
         this.csvNameExtractionService = csvNameExtractionService;
-
         this.phoneNumberValidationService = phoneNumberValidationService;
     }
 
+    private List<RectangleBox> rectangleBoxListParsed = new ArrayList<>();
+
     @Override
-    public List<RectangleBox> parseRectangleBoxList() {
+    public List<RectangleBox> parseRectangleBoxList(List<RectangleBox> rectangleListToParse) {
 
-        List<RectangleBox> rectangleBoxList = RectangleBoxLists.getRectangleBoxListOriginal();
-
-        for (RectangleBox rectangleBox : rectangleBoxList) {
+        for (RectangleBox rectangleBox : rectangleListToParse) {
             String word = rectangleBox.getWord();
             if (word.length() > 2) {
                 if (numberTypeValidationService.isValidPesel(word)) {
@@ -54,12 +53,13 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
                 }
             }
         }
-        return RectangleBoxLists.rectangleBoxListParsed;
+
+        return rectangleBoxListParsed;
     }
 
     private void addRectangleToNewList(RectangleBox rectangleBox) {
-        if (!RectangleBoxLists.rectangleBoxListParsed.contains(rectangleBox)) {
-            RectangleBoxLists.rectangleBoxListParsed.add(rectangleBox);
+        if (!rectangleBoxListParsed.contains(rectangleBox)) {
+            rectangleBoxListParsed.add(rectangleBox);
         }
     }
 }
