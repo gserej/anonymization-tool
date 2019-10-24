@@ -1,21 +1,21 @@
-package com.github.gserej.anonymizationtool.controllers;
+package com.github.gserej.anonymizationtool.rectangles;
 
-import com.github.gserej.anonymizationtool.model.RectangleBox;
-import com.github.gserej.anonymizationtool.services.MarkedRectanglesProcessingService;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
 @Slf4j
-@RestController
+@Controller
 public class RectanglesHandlingController {
 
     @Getter
@@ -30,18 +30,19 @@ public class RectanglesHandlingController {
     }
 
 
-    @PostMapping(value = "/api")
+    @PostMapping(value = "/api/rectangles")
     public String postJson(@RequestBody List<RectangleBox> rectangleBoxesMarked, RedirectAttributes redirectAttributes) {
 
         markedRectanglesProcessingService.processReceivedRectangleList(rectangleBoxesMarked);
 
-        redirectAttributes.addFlashAttribute("message",
+        redirectAttributes.addFlashAttribute("fileReadyMessage",
                 "Your file was converted, click the link below to download it.");
 
         return "redirect:/";
     }
 
-    @GetMapping(value = {"/originalrectangles", "/additionalrectangles"})
+    @ResponseBody
+    @GetMapping("/api/rectangles")
     public Object sendRectangles() {
         return getRectObject();
     }

@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.imageprocessing;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
-import com.github.gserej.anonymizationtool.model.EmbeddedImageProperties;
+import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

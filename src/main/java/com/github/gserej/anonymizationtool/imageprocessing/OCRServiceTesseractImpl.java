@@ -1,8 +1,8 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.imageprocessing;
 
-import com.github.gserej.anonymizationtool.model.EmbeddedImageProperties;
-import com.github.gserej.anonymizationtool.model.RectangleBox;
-import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
+import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBoxLists;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.ITesseract;

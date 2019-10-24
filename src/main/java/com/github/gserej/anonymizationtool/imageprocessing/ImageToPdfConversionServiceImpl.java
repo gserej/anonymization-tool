@@ -1,8 +1,8 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.imageprocessing;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
 import com.github.gserej.anonymizationtool.filestorage.TemporaryImageList;
-import com.github.gserej.anonymizationtool.model.Ratio;
+import com.github.gserej.anonymizationtool.imageprocessing.model.Ratio;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -70,9 +70,7 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
             List<String> imagesNames = TemporaryImageList.getTempImagesList();
             List<File> imageFiles = new ArrayList<>();
 
-
             for (String imageName : imagesNames) {
-                System.out.println("path: " + rootLocation + "/tempImages/" + imageName);
 
                 File file = new File(rootLocation + "/tempImages/" + imageName);
                 imageFiles.add(file);

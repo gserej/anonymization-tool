@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.model;
+package com.github.gserej.anonymizationtool.rectangles.model;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,10 +15,6 @@ public class RectangleBoxLists {
     @Getter
     @Setter
     public static List<RectangleBox> rectangleBoxListOriginal = new ArrayList<>();
-
-    @Getter
-    @Setter
-    public static List<RectangleBox> rectangleBoxListParsed = new ArrayList<>();
 
     @Getter
     @Setter

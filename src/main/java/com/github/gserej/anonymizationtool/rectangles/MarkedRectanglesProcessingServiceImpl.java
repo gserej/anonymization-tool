@@ -1,10 +1,11 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.rectangles;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import com.github.gserej.anonymizationtool.filestorage.TempName;
 import com.github.gserej.anonymizationtool.filestorage.TemporaryImageList;
-import com.github.gserej.anonymizationtool.model.RectangleBox;
-import com.github.gserej.anonymizationtool.model.RectangleBoxLists;
+import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBoxLists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

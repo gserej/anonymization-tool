@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.rectangles;
 
 import java.io.File;
 import java.io.IOException;

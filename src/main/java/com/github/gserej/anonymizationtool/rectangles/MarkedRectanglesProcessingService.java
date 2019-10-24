@@ -1,6 +1,6 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.rectangles;
 
-import com.github.gserej.anonymizationtool.model.RectangleBox;
+import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 
 import java.util.List;
 

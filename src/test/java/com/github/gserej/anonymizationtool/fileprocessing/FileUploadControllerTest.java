@@ -1,8 +1,7 @@
-package com.github.gserej.anonymizationtool.controllers;
+package com.github.gserej.anonymizationtool.fileprocessing;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
-import com.github.gserej.anonymizationtool.services.FileProcessingService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -98,6 +97,4 @@ class FileUploadControllerTest {
                         "You successfully uploaded " + TEST_PDF + "!"));
 
     }
-
-
 }

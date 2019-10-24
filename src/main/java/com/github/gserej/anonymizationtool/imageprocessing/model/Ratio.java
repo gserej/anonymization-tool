@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.model;
+package com.github.gserej.anonymizationtool.imageprocessing.model;
 
 import lombok.Getter;
 

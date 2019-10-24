@@ -1,8 +1,7 @@
-package com.github.gserej.anonymizationtool.controllers;
+package com.github.gserej.anonymizationtool.fileprocessing;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
-import com.github.gserej.anonymizationtool.services.FileProcessingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;

@@ -1,6 +1,6 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.imageprocessing;
 
-import com.github.gserej.anonymizationtool.model.EmbeddedImageProperties;
+import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
 
 import java.io.File;
 
