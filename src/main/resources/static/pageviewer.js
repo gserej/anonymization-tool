@@ -152,7 +152,7 @@ function hasId(prop, value, data) {
 function getRectangles() {
     $.ajax({
         type: "get",
-        url: "/originalrectangles",
+        url: "/api/rectangles",
         contentType: 'application/json',
         success: function (data) {
             if (!$.trim(data)) {
@@ -190,7 +190,7 @@ $("#do-refactor").on('click', function () {
     });
     console.log(filteredRects);
     $.ajax({
-        url: "/api",
+        url: "/api/rectangles",
         type: 'post',
         data: JSON.stringify(filteredRects),
         contentType: 'application/json',
