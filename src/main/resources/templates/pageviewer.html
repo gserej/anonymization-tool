@@ -69,7 +69,6 @@ limitations under the License.
     </style>
 </head>
 
-
 <body class="h-100" tabindex="1">
 <div class="container-fluid">
     <div class="jumbotron">
@@ -92,12 +91,12 @@ limitations under the License.
         </div>
 
         <!--/*@thymesVar id="message" type=""*/-->
-        <div th:if="${message}">
+        <div th:if="${message !=null}">
             <h3 th:text="${message}"></h3>
-            <!--/*@thymesVar id="fileReadyMessage" type=""*/-->
-            <div th:if="${fileReadyMessage}">
-                <h3 th:text="${fileReadyMessage}"></h3>
-            </div>
+        </div>
+        <!--/*@thymesVar id="fileReadyMessage" type=""*/-->
+        <div th:if="${fileReadyMessage}">
+            <h3 th:text="${fileReadyMessage}"></h3>
         </div>
         <div id="files-list">
             <ul>
