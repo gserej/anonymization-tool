@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.datatype;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

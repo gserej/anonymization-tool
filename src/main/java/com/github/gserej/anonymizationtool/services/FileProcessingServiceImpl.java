@@ -1,6 +1,7 @@
 package com.github.gserej.anonymizationtool.services;
 
 import com.github.gserej.anonymizationtool.controllers.RectanglesHandlingController;
+import com.github.gserej.anonymizationtool.datatype.RectangleParsingService;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import com.github.gserej.anonymizationtool.filestorage.TempName;
 import com.github.gserej.anonymizationtool.model.Ratio;

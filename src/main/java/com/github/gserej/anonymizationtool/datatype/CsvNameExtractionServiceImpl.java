@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.datatype;
 
 import com.opencsv.CSVReader;
 import org.springframework.stereotype.Service;
@@ -9,7 +9,7 @@ import java.io.IOException;
 
 
 @Service
-public class CsvExtractionServiceImpl implements CsvExtractionService {
+public class CsvNameExtractionServiceImpl implements CsvNameExtractionService {
 
     private static final String NAMES_CSV_FILE_PATH = "named_entities_dataset/names.csv";
 
@@ -24,8 +24,10 @@ public class CsvExtractionServiceImpl implements CsvExtractionService {
             String[] line;
             while ((line = csvReader.readNext()) != null) {
                 if (word.equalsIgnoreCase(line[0])) {
-                    if (line[1].equals("P-N") || line[1].equals("P-L")) {
-                        return true;
+                    if (Character.isUpperCase(word.codePointAt(0))) {
+                        if (line[1].equals("P-N") || line[1].equals("P-L")) {
+                            return true;
+                        }
                     }
                 }
             }

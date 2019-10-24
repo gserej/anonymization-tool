@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.services;
+package com.github.gserej.anonymizationtool.datatype;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
