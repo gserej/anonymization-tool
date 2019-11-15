@@ -202,7 +202,8 @@ $("#do-refactor").on('click', function () {
 
 function drawRedRec(x, y, w, h, rectNum) {
     var $cloned = $("#pageContainer > div > div.canvasWrapper > canvas[id^=page]:last").first().clone();
-    $cloned.clone().prop('id', 'rect' + rectNum).prop('style', 'position: absolute').prependTo("#pageContainer > div > div.canvasWrapper");
+    $cloned.clone().prop('id', 'rect' + rectNum).prop('style', 'position: absolute')
+        .removeAttr("moz-opaque").prependTo("#pageContainer > div > div.canvasWrapper");
     var c = $("canvas[id^=rect]");
     var ctx = c.get(0).getContext("2d");
     ctx.strokeStyle = 'rgba(255,0,0,1)';
@@ -215,7 +216,8 @@ function drawRedRec(x, y, w, h, rectNum) {
 
 function drawBlackRec(x, y, w, h, rectNum) {
     var $cloned = $("#pageContainer > div > div.canvasWrapper > canvas[id^=page]:last").first().clone();
-    $cloned.clone().prop('id', 'rect' + rectNum).prop('style', 'position: absolute').prependTo("#pageContainer > div > div.canvasWrapper");
+    $cloned.clone().prop('id', 'rect' + rectNum).prop('style', 'position: absolute')
+        .removeAttr("moz-opaque").prependTo("#pageContainer > div > div.canvasWrapper");
     var c = $("canvas[id^=rect]");
     var ctx = c.get(0).getContext("2d");
     ctx.strokeStyle = 'rgba(0,0,0,1)';
