@@ -1,8 +1,7 @@
 package com.github.gserej.anonymizationtool.rectangles;
 
+import com.github.gserej.anonymizationtool.fileprocessing.FileProcessingService;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -18,15 +17,13 @@ import java.util.List;
 @Controller
 public class RectanglesHandlingController {
 
-    @Getter
-    @Setter
-    private Object rectObject;
-
     private MarkedRectanglesProcessingService markedRectanglesProcessingService;
+    private FileProcessingService fileProcessingService;
 
     @Autowired
-    public RectanglesHandlingController(MarkedRectanglesProcessingService markedRectanglesProcessingService) {
+    public RectanglesHandlingController(MarkedRectanglesProcessingService markedRectanglesProcessingService, FileProcessingService fileProcessingService) {
         this.markedRectanglesProcessingService = markedRectanglesProcessingService;
+        this.fileProcessingService = fileProcessingService;
     }
 
 
@@ -43,8 +40,8 @@ public class RectanglesHandlingController {
 
     @ResponseBody
     @GetMapping("/api/rectangles")
-    public Object sendRectangles() {
-        return getRectObject();
+    public List<RectangleBox> sendRectangles() {
+        return fileProcessingService.getRectList();
     }
 
 }

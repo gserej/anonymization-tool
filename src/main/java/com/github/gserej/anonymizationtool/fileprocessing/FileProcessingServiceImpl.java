@@ -7,10 +7,11 @@ import com.github.gserej.anonymizationtool.imageprocessing.ImageLocationsExtract
 import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
 import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
 import com.github.gserej.anonymizationtool.imageprocessing.model.Ratio;
-import com.github.gserej.anonymizationtool.rectangles.RectanglesHandlingController;
 import com.github.gserej.anonymizationtool.rectangles.WordsPrintingService;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBoxLists;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,23 +31,31 @@ public class FileProcessingServiceImpl implements FileProcessingService {
     private ImageToPdfConversionService imageToPdfConversionService;
     private RectangleParsingService rectangleParsingService;
     private ImageLocationsExtractionService imageLocationsExtractionService;
-    private RectanglesHandlingController rectanglesHandlingController;
     private WordsPrintingService wordsPrintingService;
+
+    @Getter
+    @Setter
+    private List<RectangleBox> temporaryRectangleList;
+
 
     @Autowired
     public FileProcessingServiceImpl(StorageService storageService, TempName tempName, OCRService ocrService,
                                      ImageToPdfConversionService imageToPdfConversionService,
                                      RectangleParsingService rectangleParsingService,
                                      ImageLocationsExtractionService imageLocationsExtractionService,
-                                     RectanglesHandlingController rectanglesHandlingController, WordsPrintingService wordsPrintingService) {
+                                     WordsPrintingService wordsPrintingService) {
         this.storageService = storageService;
         this.tempName = tempName;
         this.ocrService = ocrService;
         this.imageToPdfConversionService = imageToPdfConversionService;
         this.rectangleParsingService = rectangleParsingService;
         this.imageLocationsExtractionService = imageLocationsExtractionService;
-        this.rectanglesHandlingController = rectanglesHandlingController;
         this.wordsPrintingService = wordsPrintingService;
+    }
+
+    @Override
+    public List<RectangleBox> getRectList() {
+        return temporaryRectangleList;
     }
 
     @Override
@@ -77,20 +86,22 @@ public class FileProcessingServiceImpl implements FileProcessingService {
         } catch (IOException e) {
             log.error("Exception: getting words locations from PDF failed.");
         }
-        List<RectangleBox> temporaryListFromPdf = rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
-        rectanglesHandlingController.setRectObject(temporaryListFromPdf);
+        temporaryRectangleList = rectangleParsingService
+                .parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
 
-        log.info("Rectangles extracted from text to be sent to the page: " + temporaryListFromPdf.toString());
+        log.info("Rectangles extracted from text to be sent to the page: " + temporaryRectangleList.toString());
 
         Runnable r = () -> {
             log.info("Trying to find images embedded in PDF file: starting...");
             try {
                 imageLocationsExtractionService.extractImages(fileToProcess);
 
-                List<RectangleBox> temporaryListFromImage = rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
-                rectanglesHandlingController.setRectObject(temporaryListFromImage);
+                temporaryRectangleList = rectangleParsingService
+                        .parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
 
-                log.info("Additional rectangles extracted from image(s) to be sent sent to the page: " + temporaryListFromImage.toString());
+                log.info("Additional rectangles extracted from image(s) to be sent sent to the page: " + temporaryRectangleList.toString());
+
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -111,9 +122,9 @@ public class FileProcessingServiceImpl implements FileProcessingService {
                 boolean ocrSuccessful = ocrService.doOcrOnSingleImageFile(fileToProcess, Ratio.getRatio());
                 if (ocrSuccessful) {
                     log.info("OCR processing: done");
-                    List<RectangleBox> temporaryList = rectangleParsingService.parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
-                    rectanglesHandlingController.setRectObject(temporaryList);
-                    log.info("Rectangles extracted from single image to be sent to the page: " + temporaryList.toString());
+                    temporaryRectangleList = rectangleParsingService
+                            .parseRectangleBoxList(RectangleBoxLists.getRectangleBoxListOriginal());
+                    log.info("Rectangles extracted from single image to be sent to the page: " + temporaryRectangleList.toString());
                 } else {
                     log.error("OCR processing: fail");
                 }
