@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Objects;
 
 
 @Service
@@ -18,7 +19,7 @@ public class CsvNameExtractionServiceImpl implements CsvNameExtractionService {
 
         try {
             ClassLoader classLoader = getClass().getClassLoader();
-            File csvFile = new File(classLoader.getResource(NAMES_CSV_FILE_PATH).getFile());
+            File csvFile = new File(Objects.requireNonNull(classLoader.getResource(NAMES_CSV_FILE_PATH)).getFile());
 
             CSVReader csvReader = new CSVReader(new FileReader(csvFile));
             String[] line;
