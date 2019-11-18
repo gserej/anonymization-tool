@@ -25,8 +25,7 @@ Running the project locally
 ====================
 To run this application run the command: `mvn clean install spring-boot:run`
 
-How To Use
-====================
-After running the application go to the http://localhost:8080/ page.
+Then go to the http://localhost:8080/ page.
 
+![](recordings/recording.gif)
 
