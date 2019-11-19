@@ -1,7 +1,7 @@
 package com.github.gserej.anonymizationtool.imageprocessing;
 
+import com.github.gserej.anonymizationtool.filestorage.DocumentMetaInfo;
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
-import com.github.gserej.anonymizationtool.filestorage.TemporaryImageList;
 import com.github.gserej.anonymizationtool.imageprocessing.model.Ratio;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -24,10 +24,13 @@ import java.util.List;
 public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionService {
 
     private final Path rootLocation;
+    private DocumentMetaInfo documentMetaInfo;
+
 
     @Autowired
-    public ImageToPdfConversionServiceImpl(StorageProperties properties) {
+    public ImageToPdfConversionServiceImpl(StorageProperties properties, DocumentMetaInfo documentMetaInfo) {
         rootLocation = Paths.get(properties.getLocation());
+        this.documentMetaInfo = documentMetaInfo;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
 
         try (PDDocument doc = PDDocument.load(originalDocument)) {
 
-            List<String> imagesNames = TemporaryImageList.getTempImagesList();
+            List<String> imagesNames = documentMetaInfo.getImageList();
             List<File> imageFiles = new ArrayList<>();
 
             for (String imageName : imagesNames) {

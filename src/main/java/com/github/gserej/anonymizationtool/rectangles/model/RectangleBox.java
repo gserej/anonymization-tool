@@ -14,6 +14,7 @@ public class RectangleBox {
     private static final AtomicInteger count = new AtomicInteger(-1);
     private int id;
     private int page;
+    private boolean parsed;
     private boolean marked;
     private boolean drew;
     private int typeOfData;
@@ -24,7 +25,7 @@ public class RectangleBox {
     private String word;
 
 
-    public RectangleBox(boolean marked, boolean drew, float x, float y, float w, float h, int typeOfData, String word, int page) {
+    public RectangleBox(boolean marked, boolean drew, boolean parsed, float x, float y, float w, float h, int typeOfData, String word, int page) {
         this.id = count.incrementAndGet();
         this.marked = marked;
         this.x = x;

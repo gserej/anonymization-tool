@@ -1,8 +1,8 @@
 package com.github.gserej.anonymizationtool.imageprocessing;
 
 import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
+import com.github.gserej.anonymizationtool.rectangles.RectangleBoxLists;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
-import com.github.gserej.anonymizationtool.rectangles.model.RectangleBoxLists;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.ITesseract;
@@ -23,12 +23,19 @@ import java.util.List;
 @Service
 public class OCRServiceTesseractImpl implements OCRService {
 
+    private RectangleBoxLists rectangleBoxLists;
+
     private final int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
     @Value("${tessdata.path}")
     String tessdataPathString;
 
+    public OCRServiceTesseractImpl(RectangleBoxLists rectangleBoxLists) {
+        this.rectangleBoxLists = rectangleBoxLists;
+    }
+
     private ITesseract initOcr() {
         ITesseract instance = new Tesseract();
+        instance.setTessVariable("user_defined_dpi", "70");
         try {
             String resourcePath = ResourceUtils.getFile(tessdataPathString).getAbsolutePath();
             instance.setDatapath(resourcePath);
@@ -46,21 +53,25 @@ public class OCRServiceTesseractImpl implements OCRService {
         if (instance != null) {
             try {
                 BufferedImage bi = ImageIO.read(imageFile);
+
                 List<Word> wordList = instance.getWords(bi, level);
 
                 for (Word word : wordList) {
                     RectangleBox rectangleBox = new RectangleBox(false,
+                            false,
                             false,
                             ratio * (float) word.getBoundingBox().getX(),
                             ratio * (float) word.getBoundingBox().getY(),
                             ratio * (float) word.getBoundingBox().getWidth(),
                             ratio * (float) word.getBoundingBox().getHeight(),
                             1, word.getText(), 1);
-                    RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
+                    rectangleBoxLists.addRectangle(rectangleBox);
                 }
                 return true;
+            } catch (NullPointerException e) {
+                log.error("NullPointerException. Couldn't find a words in image: " + e);
             } catch (IOException e) {
-                log.error("Error: " + e);
+                log.error("IO Exception: " + e);
             }
         }
         return false;
@@ -84,12 +95,13 @@ public class OCRServiceTesseractImpl implements OCRService {
                 for (Word word : wordList) {
                     RectangleBox rectangleBox = new RectangleBox(false,
                             false,
+                            false,
                             positionX + (float) word.getBoundingBox().getX() * sizeX / bi.getWidth(),
                             -positionY + pageHeight - sizeY + (float) word.getBoundingBox().getY() * sizeY / bi.getHeight(),
                             (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
                             (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
                             1, word.getText(), Math.round(pageNum));
-                    RectangleBoxLists.rectangleBoxListOriginal.add(rectangleBox);
+                    rectangleBoxLists.addRectangle(rectangleBox);
                 }
             } catch (IOException e) {
                 log.error("Error: " + e);

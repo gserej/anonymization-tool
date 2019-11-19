@@ -1,5 +1,7 @@
 package com.github.gserej.anonymizationtool.datatype;
 
+import com.github.gserej.anonymizationtool.datacategory.CsvNameExtractionService;
+import com.github.gserej.anonymizationtool.datacategory.impl.CsvNameExtractionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

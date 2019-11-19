@@ -1,5 +1,7 @@
 package com.github.gserej.anonymizationtool.datatype;
 
+import com.github.gserej.anonymizationtool.datacategory.PhoneNumberValidationService;
+import com.github.gserej.anonymizationtool.datacategory.impl.PhoneNumberValidationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
