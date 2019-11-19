@@ -1,5 +1,6 @@
-package com.github.gserej.anonymizationtool.datatype;
+package com.github.gserej.anonymizationtool.datacategory.impl;
 
+import com.github.gserej.anonymizationtool.datacategory.NumberTypeValidationService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 

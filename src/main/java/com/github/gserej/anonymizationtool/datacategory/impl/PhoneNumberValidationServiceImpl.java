@@ -1,5 +1,6 @@
-package com.github.gserej.anonymizationtool.datatype;
+package com.github.gserej.anonymizationtool.datacategory.impl;
 
+import com.github.gserej.anonymizationtool.datacategory.PhoneNumberValidationService;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;

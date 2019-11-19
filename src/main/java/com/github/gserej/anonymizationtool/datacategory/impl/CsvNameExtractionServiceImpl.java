@@ -1,5 +1,6 @@
-package com.github.gserej.anonymizationtool.datatype;
+package com.github.gserej.anonymizationtool.datacategory.impl;
 
+import com.github.gserej.anonymizationtool.datacategory.CsvNameExtractionService;
 import com.opencsv.CSVReader;
 import org.springframework.stereotype.Service;
 

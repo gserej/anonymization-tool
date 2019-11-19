@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.datatype;
+package com.github.gserej.anonymizationtool.datacategory;
 
 public interface NumberTypeValidationService {
     boolean isValidPesel(String pesel);
