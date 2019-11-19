@@ -12,13 +12,20 @@ public class DocumentMetaInfo {
 
     @Getter
     @Setter
-    public List<String> imageList = new ArrayList<>();
+    private String documentName;
+
     @Getter
     @Setter
-    private String documentName;
+    private List<String> imageList = new ArrayList<>();
 
     public void addImageName(String imageName) {
         this.imageList.add(imageName);
     }
+
+
+    @Getter
+    @Setter
+    private float imageRatio;
+
 
 }

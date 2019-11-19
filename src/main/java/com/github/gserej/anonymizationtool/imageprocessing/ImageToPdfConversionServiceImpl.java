@@ -2,7 +2,6 @@ package com.github.gserej.anonymizationtool.imageprocessing;
 
 import com.github.gserej.anonymizationtool.filestorage.DocumentMetaInfo;
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
-import com.github.gserej.anonymizationtool.imageprocessing.model.Ratio;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -49,7 +48,7 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
                 float widthRatio = page.getCropBox().getWidth() / width;
                 float heightRatio = page.getCropBox().getHeight() / height;
                 float ratio = Math.min(widthRatio, heightRatio);
-                new Ratio(ratio);
+                documentMetaInfo.setImageRatio(ratio);
                 contents.drawImage(pdImage,
                         page.getCropBox().getWidth() - ratio * width,
                         page.getCropBox().getHeight() - ratio * height,

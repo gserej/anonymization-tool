@@ -6,7 +6,6 @@ import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageLocationsExtractionService;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
 import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
-import com.github.gserej.anonymizationtool.imageprocessing.model.Ratio;
 import com.github.gserej.anonymizationtool.rectangles.RectangleBoxLists;
 import com.github.gserej.anonymizationtool.rectangles.WordsPrintingService;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
@@ -125,7 +124,7 @@ public class FileProcessingServiceImpl implements FileProcessingService {
 
             Runnable r = () -> {
                 log.info("OCR processing: starting...");
-                boolean ocrSuccessful = ocrService.doOcrOnSingleImageFile(fileToProcess, Ratio.getRatio());
+                boolean ocrSuccessful = ocrService.doOcrOnSingleImageFile(fileToProcess, documentMetaInfo.getImageRatio());
                 if (ocrSuccessful) {
                     log.info("OCR processing: done");
                     if (rectangleBoxLists.getRectangleBoxListOriginal().isEmpty()) {

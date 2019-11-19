@@ -50,8 +50,8 @@ import java.util.List;
 public class WordsPrintingServiceImpl extends PDFTextStripper implements WordsPrintingService {
     private static final int SCALE = 8;
 
-    private static String filename;
-    private static PDDocument document;
+    private String filename;
+    private PDDocument document;
     private AffineTransform flipAT;
     private Graphics2D g2d;
     private static Path rootLocation;
@@ -88,8 +88,8 @@ public class WordsPrintingServiceImpl extends PDFTextStripper implements WordsPr
 
     private void setUpStripper(File file, PDDocument document) throws IOException {
 
-        WordsPrintingServiceImpl.document = document;
-        WordsPrintingServiceImpl.filename = file.getName();
+        this.document = document;
+        this.filename = file.getName();
         setSortByPosition(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             setPageNumber(page + 1);
