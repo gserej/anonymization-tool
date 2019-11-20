@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -55,7 +56,7 @@ public class WordsPrintingServiceImpl extends PDFTextStripper implements WordsPr
     private AffineTransform flipAT;
     private Graphics2D g2d;
     private static Path rootLocation;
-    private RectangleBoxLists rectangleBoxLists;
+    private RectangleBoxSets rectangleBoxSets;
     private DocumentMetaInfo documentMetaInfo;
 
 
@@ -68,9 +69,9 @@ public class WordsPrintingServiceImpl extends PDFTextStripper implements WordsPr
     private boolean readyToDraw;
 
     @Autowired
-    public WordsPrintingServiceImpl(StorageProperties properties, RectangleBoxLists rectangleBoxLists, DocumentMetaInfo documentMetaInfo) throws IOException {
+    public WordsPrintingServiceImpl(StorageProperties properties, RectangleBoxSets rectangleBoxSets, DocumentMetaInfo documentMetaInfo) throws IOException {
         rootLocation = Paths.get(properties.getLocation());
-        this.rectangleBoxLists = rectangleBoxLists;
+        this.rectangleBoxSets = rectangleBoxSets;
         this.documentMetaInfo = documentMetaInfo;
     }
 
@@ -145,13 +146,13 @@ public class WordsPrintingServiceImpl extends PDFTextStripper implements WordsPr
     private void drawWordImage(int page) {
         Matrix matrix = new Matrix();
         AffineTransform at = matrix.createAffineTransform();
-        for (int i = 0; i < rectangleBoxLists.getRectangleBoxListMarked().size(); i++) {
-            List<RectangleBox> rectangleBoxes = rectangleBoxLists.getRectangleBoxListMarked();
-            if (rectangleBoxes.get(i).getPage() == page) {
-                Rectangle2D.Float rect = new Rectangle2D.Float(rectangleBoxes.get(i).getX(),
-                        rectangleBoxes.get(i).getY(),
-                        rectangleBoxes.get(i).getW(),
-                        rectangleBoxes.get(i).getH());
+        Set<RectangleBox> rectangleBoxes = rectangleBoxSets.getRectangleBoxSetMarked();
+        for (RectangleBox rectangleBox : rectangleBoxes) {
+            if (rectangleBox.getPage() == page) {
+                Rectangle2D.Float rect = new Rectangle2D.Float(rectangleBox.getX(),
+                        rectangleBox.getY(),
+                        rectangleBox.getW(),
+                        rectangleBox.getH());
 
                 Shape s = at.createTransformedShape(rect);
                 g2d.setColor(Color.black);
@@ -216,7 +217,7 @@ public class WordsPrintingServiceImpl extends PDFTextStripper implements WordsPr
                 (float) s.getBounds2D().getHeight(),
                 1, singleWord, page);
 
-        rectangleBoxLists.addRectangle(rectangleBox);
+        rectangleBoxSets.addRectangle(rectangleBox);
 
     }
 }

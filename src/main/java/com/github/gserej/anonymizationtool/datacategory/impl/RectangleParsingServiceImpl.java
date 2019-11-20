@@ -8,8 +8,8 @@ import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 import org.apache.commons.validator.GenericValidator;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class RectangleParsingServiceImpl implements RectangleParsingService {
@@ -26,46 +26,44 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
         this.phoneNumberValidationService = phoneNumberValidationService;
     }
 
-    private List<RectangleBox> rectangleBoxListParsed = new ArrayList<>();
+    private Set<RectangleBox> rectangleBoxSetParsed = new HashSet<>();
 
     @Override
-    public List<RectangleBox> parseRectangleBoxList(List<RectangleBox> rectangleListToParse) {
+    public Set<RectangleBox> parseRectangleBoxSet(Set<RectangleBox> rectangleSetToParse) {
 
-        for (RectangleBox rectangleBox : rectangleListToParse) {
+        for (RectangleBox rectangleBox : rectangleSetToParse) {
             if (!rectangleBox.isParsed()) {
                 String word = rectangleBox.getWord();
                 if (word.length() > 2) {
                     if (numberTypeValidationService.isValidPesel(word)) {
                         rectangleBox.setTypeOfData(2);
-                        addRectangleToNewList(rectangleBox);
+                        addRectangleToNewSet(rectangleBox);
                     } else if (numberTypeValidationService.isValidNIP(word)) {
                         rectangleBox.setTypeOfData(3);
-                        addRectangleToNewList(rectangleBox);
+                        addRectangleToNewSet(rectangleBox);
                     } else if (numberTypeValidationService.isValidREGON(word)) {
                         rectangleBox.setTypeOfData(4);
-                        addRectangleToNewList(rectangleBox);
+                        addRectangleToNewSet(rectangleBox);
                     } else if (GenericValidator.isDate(word, null)) {
                         rectangleBox.setTypeOfData(8);
-                        addRectangleToNewList(rectangleBox);
+                        addRectangleToNewSet(rectangleBox);
                     } else if (phoneNumberValidationService.isValidPolishPhoneNumber(word)) {
                         rectangleBox.setTypeOfData(6);
-                        addRectangleToNewList(rectangleBox);
+                        addRectangleToNewSet(rectangleBox);
                     } else if (csvNameExtractionService.isPolishFirstOrLastName(word)) {
                         rectangleBox.setTypeOfData(5);
-                        addRectangleToNewList(rectangleBox);
+                        addRectangleToNewSet(rectangleBox);
                     } else if (word.equalsIgnoreCase("Lorem")) {
-                        addRectangleToNewList(rectangleBox);
+                        addRectangleToNewSet(rectangleBox);
                     }
                 }
             }
         }
 
-        return rectangleBoxListParsed;
+        return rectangleBoxSetParsed;
     }
 
-    private void addRectangleToNewList(RectangleBox rectangleBox) {
-        if (!rectangleBoxListParsed.contains(rectangleBox)) {
-            rectangleBoxListParsed.add(rectangleBox);
-        }
+    private void addRectangleToNewSet(RectangleBox rectangleBox) {
+        rectangleBoxSetParsed.add(rectangleBox);
     }
 }

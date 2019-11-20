@@ -6,23 +6,23 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 @Component
-public class RectangleBoxLists {
+public class RectangleBoxSets {
 
     @Getter
     @Setter
-    private List<RectangleBox> rectangleBoxListOriginal = new ArrayList<>();
+    private Set<RectangleBox> rectangleBoxSetOriginal = new HashSet<>();
 
     @Getter
     @Setter
-    private List<RectangleBox> rectangleBoxListMarked = new ArrayList<>();
+    private Set<RectangleBox> rectangleBoxSetMarked = new HashSet<>();
 
     public void addRectangle(RectangleBox rectangleBox) {
-        this.rectangleBoxListOriginal.add(rectangleBox);
+        this.rectangleBoxSetOriginal.add(rectangleBox);
     }
 }
 

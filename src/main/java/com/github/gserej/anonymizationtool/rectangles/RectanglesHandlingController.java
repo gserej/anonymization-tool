@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Controller
@@ -28,9 +28,9 @@ public class RectanglesHandlingController {
 
 
     @PostMapping(value = "/api/rectangles")
-    public String postJson(@RequestBody List<RectangleBox> rectangleBoxesMarked, RedirectAttributes redirectAttributes) {
+    public String postJson(@RequestBody Set<RectangleBox> rectangleBoxesMarked, RedirectAttributes redirectAttributes) {
 
-        markedRectanglesProcessingService.processReceivedRectangleList(rectangleBoxesMarked);
+        markedRectanglesProcessingService.processReceivedRectangleSet(rectangleBoxesMarked);
 
         redirectAttributes.addFlashAttribute("fileReadyMessage",
                 "Your file was converted, click the link below to download it.");
@@ -40,8 +40,8 @@ public class RectanglesHandlingController {
 
     @ResponseBody
     @GetMapping("/api/rectangles")
-    public List<RectangleBox> sendRectangles() {
-        return fileProcessingService.getRectList();
+    public Set<RectangleBox> sendRectangles() {
+        return fileProcessingService.getRectSet();
     }
 
 }

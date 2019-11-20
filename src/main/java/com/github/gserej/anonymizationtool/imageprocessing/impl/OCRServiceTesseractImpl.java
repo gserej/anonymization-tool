@@ -2,7 +2,7 @@ package com.github.gserej.anonymizationtool.imageprocessing.impl;
 
 import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
 import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
-import com.github.gserej.anonymizationtool.rectangles.RectangleBoxLists;
+import com.github.gserej.anonymizationtool.rectangles.RectangleBoxSets;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITessAPI;
@@ -24,14 +24,14 @@ import java.util.List;
 @Service
 public class OCRServiceTesseractImpl implements OCRService {
 
-    private RectangleBoxLists rectangleBoxLists;
+    private RectangleBoxSets rectangleBoxSets;
 
     private final int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
     @Value("${tessdata.path}")
     String tessdataPathString;
 
-    public OCRServiceTesseractImpl(RectangleBoxLists rectangleBoxLists) {
-        this.rectangleBoxLists = rectangleBoxLists;
+    public OCRServiceTesseractImpl(RectangleBoxSets rectangleBoxSets) {
+        this.rectangleBoxSets = rectangleBoxSets;
     }
 
     private ITesseract initOcr() {
@@ -66,7 +66,7 @@ public class OCRServiceTesseractImpl implements OCRService {
                             ratio * (float) word.getBoundingBox().getWidth(),
                             ratio * (float) word.getBoundingBox().getHeight(),
                             1, word.getText(), 1);
-                    rectangleBoxLists.addRectangle(rectangleBox);
+                    rectangleBoxSets.addRectangle(rectangleBox);
                 }
                 return true;
             } catch (NullPointerException e) {
@@ -102,7 +102,7 @@ public class OCRServiceTesseractImpl implements OCRService {
                             (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
                             (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
                             1, word.getText(), Math.round(pageNum));
-                    rectangleBoxLists.addRectangle(rectangleBox);
+                    rectangleBoxSets.addRectangle(rectangleBox);
                 }
             } catch (IOException e) {
                 log.error("Error: " + e);

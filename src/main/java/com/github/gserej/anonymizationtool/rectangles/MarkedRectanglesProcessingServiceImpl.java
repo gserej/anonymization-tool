@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -20,23 +20,23 @@ public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesPr
     private final DocumentMetaInfo documentMetaInfo;
     private ImageToPdfConversionService imageToPdfConversionService;
     private WordsPrintingService wordsPrintingService;
-    private RectangleBoxLists rectangleBoxLists;
+    private RectangleBoxSets rectangleBoxSets;
 
 
-    public MarkedRectanglesProcessingServiceImpl(ImageToPdfConversionService imageToPdfConversionService, WordsPrintingService wordsPrintingService, StorageService storageService, DocumentMetaInfo documentMetaInfo, RectangleBoxLists rectangleBoxLists) {
+    public MarkedRectanglesProcessingServiceImpl(ImageToPdfConversionService imageToPdfConversionService, WordsPrintingService wordsPrintingService, StorageService storageService, DocumentMetaInfo documentMetaInfo, RectangleBoxSets rectangleBoxSets) {
         this.imageToPdfConversionService = imageToPdfConversionService;
         this.wordsPrintingService = wordsPrintingService;
         this.storageService = storageService;
         this.documentMetaInfo = documentMetaInfo;
-        this.rectangleBoxLists = rectangleBoxLists;
+        this.rectangleBoxSets = rectangleBoxSets;
     }
 
 
     @Override
-    public void processReceivedRectangleList(List<RectangleBox> rectangleBoxesMarked) {
+    public void processReceivedRectangleSet(Set<RectangleBox> rectangleBoxesMarked) {
 
         log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
-        rectangleBoxLists.setRectangleBoxListMarked(rectangleBoxesMarked);
+        rectangleBoxSets.setRectangleBoxSetMarked(rectangleBoxesMarked);
 
         File pdfFileToProcess = storageService.loadAsFile(documentMetaInfo.getDocumentName());
         log.info("Loaded PDF file: " + pdfFileToProcess.getName());

@@ -2,10 +2,10 @@ package com.github.gserej.anonymizationtool.rectangles;
 
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 
-import java.util.List;
+import java.util.Set;
 
 public interface MarkedRectanglesProcessingService {
 
-    void processReceivedRectangleList(List<RectangleBox> rectangleBoxesMarked);
+    void processReceivedRectangleSet(Set<RectangleBox> rectangleBoxesMarked);
 
 }
