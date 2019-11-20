@@ -1,6 +1,5 @@
-package com.github.gserej.anonymizationtool.datatype;
+package com.github.gserej.anonymizationtool.datacategory;
 
-import com.github.gserej.anonymizationtool.datacategory.CsvNameExtractionService;
 import com.github.gserej.anonymizationtool.datacategory.impl.CsvNameExtractionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +18,18 @@ class CsvNameExtractionServiceImplTest {
     }
 
     @Test
-    void isCommonPolishLastNameFound() {
+    void isCommonPolishLastNameFound1() {
         assertTrue(csvNameExtractionService.isPolishFirstOrLastName("Kowalski"));
+    }
+
+    @Test
+    void isCommonPolishLastNameFound2() {
+        assertTrue(csvNameExtractionService.isPolishFirstOrLastName("Nowak"));
+    }
+
+    @Test
+    void isCommonPolishLastNameLoweCase() {
+        assertFalse(csvNameExtractionService.isPolishFirstOrLastName("nowak"));
     }
 
     @Test
