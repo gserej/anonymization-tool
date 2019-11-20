@@ -78,7 +78,6 @@ limitations under the License.
         </div>
         <div id="upload-form">
             <form action="/" enctype="multipart/form-data" method="POST">
-                <input class="btn btn-primary" disabled type="submit" value="Upload"/>
                 <div class="custom-file col-md-4 col-sm-6">
                     <input accept="application/pdf, image/jpeg, image/png" class="custom-file-input" id="customFile"
                            name="file"
@@ -86,7 +85,7 @@ limitations under the License.
                     <label class="custom-file-label" for="customFile">Choose file</label>
                 </div>
                 <br>
-
+                <input class="btn btn-primary mt-2" disabled type="submit" value="Upload"/>
             </form>
         </div>
 
@@ -99,7 +98,7 @@ limitations under the License.
             <h3 th:text="${fileReadyMessage}"></h3>
         </div>
         <div id="files-list">
-            <ul>
+            <ul class="list-unstyled">
                 <li th:each="file : ${files}">
                     <a th:href="${file}" th:text="${file}"></a>
                 </li>
