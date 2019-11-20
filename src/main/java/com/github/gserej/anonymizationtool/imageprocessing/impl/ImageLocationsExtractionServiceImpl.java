@@ -91,7 +91,9 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
                 processPage(page);
                 pageNum++;
             }
+            log.info("Extracted images from the file.");
         }
+
     }
 
     @Override
@@ -121,6 +123,7 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
                         getPageNum(),
                         getPageHeight());
 
+                log.info("Starting OCR process on: " + imgFile.getName());
                 ocrService.doOcrOnEmbeddedImageFiles(imgFile, embeddedImageProperties);
 
             } else if (xobject instanceof PDFormXObject) {

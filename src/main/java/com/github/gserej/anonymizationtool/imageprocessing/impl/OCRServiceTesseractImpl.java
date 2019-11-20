@@ -48,7 +48,7 @@ public class OCRServiceTesseractImpl implements OCRService {
     }
 
     @Override
-    public boolean doOcrOnSingleImageFile(File imageFile, float ratio) {
+    public boolean doOcrOnSingleImageFile(File imageFile, float imageRatio) {
 
         ITesseract instance = initOcr();
         if (instance != null) {
@@ -61,10 +61,10 @@ public class OCRServiceTesseractImpl implements OCRService {
                     RectangleBox rectangleBox = new RectangleBox(false,
                             false,
                             false,
-                            ratio * (float) word.getBoundingBox().getX(),
-                            ratio * (float) word.getBoundingBox().getY(),
-                            ratio * (float) word.getBoundingBox().getWidth(),
-                            ratio * (float) word.getBoundingBox().getHeight(),
+                            imageRatio * (float) word.getBoundingBox().getX(),
+                            imageRatio * (float) word.getBoundingBox().getY(),
+                            imageRatio * (float) word.getBoundingBox().getWidth(),
+                            imageRatio * (float) word.getBoundingBox().getHeight(),
                             1, word.getText(), 1);
                     rectangleBoxSets.addRectangle(rectangleBox);
                 }
@@ -105,7 +105,7 @@ public class OCRServiceTesseractImpl implements OCRService {
                     rectangleBoxSets.addRectangle(rectangleBox);
                 }
             } catch (IOException e) {
-                log.error("Error: " + e);
+                log.error("IO exception: " + e);
             }
         }
     }
