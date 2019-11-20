@@ -9,7 +9,7 @@ div#data-types {
 }
 
 .jumbotron {
-    padding: 5px;
+    padding: 10px;
 }
 
 html {
@@ -26,5 +26,5 @@ body {
     bottom: 0;
     width: 100%;
     height: 20px; /* Set the fixed height of the footer here */
-    line-height: 20px; /* Vertically center the text there */
+    line-height: 18px; /* Vertically center the text there */
 }
