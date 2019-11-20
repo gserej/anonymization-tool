@@ -1,6 +1,5 @@
-package com.github.gserej.anonymizationtool.datatype;
+package com.github.gserej.anonymizationtool.datacategory;
 
-import com.github.gserej.anonymizationtool.datacategory.NumberTypeValidationService;
 import com.github.gserej.anonymizationtool.datacategory.impl.NumberTypeValidationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
