@@ -1,7 +1,8 @@
-package com.github.gserej.anonymizationtool.imageprocessing;
+package com.github.gserej.anonymizationtool.imageprocessing.impl;
 
 import com.github.gserej.anonymizationtool.filestorage.DocumentMetaInfo;
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
+import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;

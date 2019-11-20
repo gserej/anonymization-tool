@@ -1,5 +1,6 @@
-package com.github.gserej.anonymizationtool.imageprocessing;
+package com.github.gserej.anonymizationtool.imageprocessing.impl;
 
+import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
 import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
 import com.github.gserej.anonymizationtool.rectangles.RectangleBoxLists;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;

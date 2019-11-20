@@ -22,10 +22,8 @@ public class DocumentMetaInfo {
         this.imageList.add(imageName);
     }
 
-
     @Getter
     @Setter
     private float imageRatio;
-
 
 }

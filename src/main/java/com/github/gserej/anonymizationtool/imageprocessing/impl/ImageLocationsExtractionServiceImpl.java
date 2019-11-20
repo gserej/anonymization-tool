@@ -14,9 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.gserej.anonymizationtool.imageprocessing;
+package com.github.gserej.anonymizationtool.imageprocessing.impl;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
+import com.github.gserej.anonymizationtool.imageprocessing.ImageLocationsExtractionService;
+import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
 import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
 import lombok.Getter;
 import lombok.Setter;
