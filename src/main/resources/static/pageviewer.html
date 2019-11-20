@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <html dir="ltr" lang="en"
-      mozdisallowselectionprint xmlns:th="http://www.thymeleaf.org">
+      mozdisallowselectionprint>
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
@@ -32,6 +32,7 @@ limitations under the License.
     <link href="pageviewer.css" rel="stylesheet">
 
     <title>Anonymization tool</title>
+
 
 </head>
 
@@ -54,22 +55,9 @@ limitations under the License.
                 <input class="btn btn-primary mt-2" disabled type="submit" value="Upload"/>
             </form>
         </div>
+        <h3 id="message"></h3>
+        <a id="file-link"></a>
 
-        <!--/*@thymesVar id="message" type=""*/-->
-        <div th:if="${message !=null}">
-            <h3 th:text="${message}"></h3>
-        </div>
-        <!--/*@thymesVar id="fileReadyMessage" type=""*/-->
-        <div th:if="${fileReadyMessage}">
-            <h3 th:text="${fileReadyMessage}"></h3>
-        </div>
-        <div id="files-list">
-            <ul class="list-unstyled">
-                <li th:each="file : ${files}">
-                    <a th:href="${file}" th:text="${file}"></a>
-                </li>
-            </ul>
-        </div>
     </div>
 
     <div id="pdf-meta">
@@ -133,8 +121,6 @@ limitations under the License.
             </div>
         </div>
     </div>
-
-
 </div>
 
 <footer class="footer bg-secondary">
@@ -145,14 +131,12 @@ limitations under the License.
     </div>
 </footer>
 
-<script th:inline="javascript">
-    var DEFAULT_URL = [[${files}]];
+<script>
     $(".custom-file-input").on("change", function () {
         var fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
     });
 </script>
 <script src="pageviewer.js"></script>
-
 </body>
 </html>

@@ -69,12 +69,32 @@ function disableEnablePrevNext() {
 
 disableEnablePrevNext();
 
+var DEFAULT_URL;
+var message;
 
-var loadingTask = pdfjsLib.getDocument({
-    url: DEFAULT_URL,
-    cMapUrl: CMAP_URL,
-    cMapPacked: CMAP_PACKED
+$.ajax({
+    type: "get",
+    url: '/api/files',
+    success: function (data) {
+        if (data !== "") {
+            DEFAULT_URL = data;
+            $("#file-link").attr("href", data);
+            $("#file-link").html(data);
+            render();
+        }
+    }
 });
+$.ajax({
+    type: "get",
+    url: '/api/message',
+    success: function (data) {
+        if (data !== "") {
+            message = data;
+            $("#message").html(message);
+        }
+    }
+});
+
 $("#pdf-meta").hide();
 $("#data-types").hide();
 
@@ -91,6 +111,11 @@ $(document).ready(
 var rects = [];
 
 function render() {
+    var loadingTask = pdfjsLib.getDocument({
+        url: DEFAULT_URL,
+        cMapUrl: CMAP_URL,
+        cMapPacked: CMAP_PACKED
+    });
     $(".page").remove();
     loadingTask.promise.then(function (pdfDocument) {
         number_of_pages = pdfDocument.numPages;
@@ -130,7 +155,6 @@ function render() {
     });
 }
 
-render();
 
 
 var startAjaxGet = (function () {

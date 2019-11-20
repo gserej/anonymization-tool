@@ -8,13 +8,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -23,27 +19,40 @@ public class FileUploadController {
     private final StorageService storageService;
     private final FileProcessingService fileProcessingService;
 
+    private String message;
+
     @Autowired
     public FileUploadController(StorageService storageService, FileProcessingService fileProcessingService) {
         this.storageService = storageService;
         this.fileProcessingService = fileProcessingService;
     }
 
+
     @GetMapping("/")
-    public String listUploadedPdfFile(Model model) {
-        model.addAttribute("files", storageService.loadAll().map(
+    public String getMainPage() {
+        return "pageviewer.html";
+    }
+
+    @ResponseBody
+    @GetMapping("/api/message")
+    public String getMessage() {
+        return this.message;
+    }
+
+    @ResponseBody
+    @GetMapping("/api/files")
+    public String getFileLocation() {
+        return storageService.loadAll().map(
                 path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
                         "serveFile", path.getFileName().toString())
                         .build().toString())
                 .filter(f -> f.endsWith(".pdf"))
-                .limit(1)
-                .collect(Collectors.toList()));
-
-        return "pageviewer";
+                .findFirst().orElse(null);
     }
 
-    @GetMapping("/files/{filename:.+}")
+
     @ResponseBody
+    @GetMapping("/files/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
 
         Resource file = storageService.loadAsResource(filename);
@@ -53,17 +62,14 @@ public class FileUploadController {
     }
 
     @PostMapping("/")
-    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile,
-                                   RedirectAttributes redirectAttributes) {
+    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile) {
         storageService.store(multipartFile);
 
         boolean wrongExtension = fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename());
         if (wrongExtension) {
-            redirectAttributes.addFlashAttribute("message",
-                    "You have uploaded the file with a wrong file extension.");
+            message = "You have uploaded the file with a wrong file extension.";
         } else {
-            redirectAttributes.addFlashAttribute("message",
-                    "You successfully uploaded " + multipartFile.getOriginalFilename() + "!");
+            message = "You successfully uploaded " + multipartFile.getOriginalFilename() + "!";
         }
         return "redirect:/";
     }

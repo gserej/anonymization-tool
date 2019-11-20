@@ -28,6 +28,7 @@ public class RectangleBox {
     public RectangleBox(boolean marked, boolean drew, boolean parsed, float x, float y, float w, float h, int typeOfData, String word, int page) {
         this.id = count.incrementAndGet();
         this.marked = marked;
+        this.parsed = parsed;
         this.x = x;
         this.y = y;
         this.w = w;
