@@ -78,23 +78,27 @@ $.ajax({
     success: function (data) {
         if (data !== "") {
             DEFAULT_URL = data;
-            $("#file-link").attr("href", data);
-            $("#file-link").html(data);
+            $("#file-link").attr("href", data).html(data);
             render();
         }
     }
 });
-$.ajax({
-    type: "get",
-    url: '/api/message',
-    success: function (data) {
-        if (data !== "") {
-            message = data;
-            $("#message").html(message);
-        }
-    }
-});
 
+function fetchMessage() {
+    $.ajax({
+        type: "get",
+        url: '/api/message',
+        success: function (data) {
+            if (data !== "") {
+                message = data;
+                $("#message").html(message);
+            }
+        }
+    });
+}
+
+
+fetchMessage();
 $("#pdf-meta").hide();
 $("#data-types").hide();
 
@@ -156,7 +160,6 @@ function render() {
 }
 
 
-
 var startAjaxGet = (function () {
     var executed = false;
     return function () {
@@ -215,13 +218,14 @@ $("#do-refactor").on('click', function () {
     console.log(filteredRects);
     $.ajax({
         url: "/api/rectangles",
-        type: 'post',
+        method: 'POST',
         data: JSON.stringify(filteredRects),
         contentType: 'application/json',
-        error: function () {
-            alert('error');
-        }
-    });
+        async: true
+    }).then(console.log("Then"),
+        fetchMessage()
+    );
+
 });
 
 function drawRedRec(x, y, w, h, rectNum) {
