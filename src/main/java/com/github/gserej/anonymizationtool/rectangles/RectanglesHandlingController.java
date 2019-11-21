@@ -4,17 +4,15 @@ import com.github.gserej.anonymizationtool.messages.MessageService;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
 
 @Slf4j
-@Controller
+@RestController
 public class RectanglesHandlingController {
 
     private MarkedRectanglesProcessingService markedRectanglesProcessingService;
@@ -29,16 +27,14 @@ public class RectanglesHandlingController {
     }
 
     @PostMapping(value = "/api/rectangles")
-    public ResponseEntity<?> postJson(@RequestBody Set<RectangleBox> rectangleBoxesMarked) {
+    public String postRectangles(@RequestBody Set<RectangleBox> rectangleBoxesMarked) {
         markedRectanglesProcessingService.processReceivedRectangleSet(rectangleBoxesMarked);
         messageService.setCurrentMessage(messageService.getDOWNLOAD_LINK_READY());
-        return ResponseEntity.ok("link created");
+        return "link created";
     }
 
-    @ResponseBody
     @GetMapping("/api/rectangles")
     public Set<RectangleBox> sendRectangles() {
         return rectangleBoxSets.getRectangleBoxSetParsed();
     }
-
 }

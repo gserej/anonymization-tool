@@ -20,12 +20,9 @@ if (!pdfjsLib.getDocument || !pdfjsViewer.PDFPageView) {
         '  `gulp dist-install`');
 }
 
-// The workerSrc property shall be specified.
-//
 pdfjsLib.GlobalWorkerOptions.workerSrc =
     'pdfjs-dist/build/pdf.worker.js';
 
-// Some PDFs need external cmaps.
 var CMAP_URL = 'pdfjs-dist/web/cmaps/';
 var CMAP_PACKED = true;
 
@@ -97,8 +94,26 @@ function fetchMessage() {
     });
 }
 
-
 fetchMessage();
+
+$("#do-refactor").on('click', function () {
+
+    var filteredRects = rects.filter(function (e) {
+        return e.marked === true
+    });
+    // console.log(filteredRects);
+    $.ajax({
+        url: "/api/rectangles",
+        method: 'POST',
+        data: JSON.stringify(filteredRects),
+        contentType: 'application/json',
+        success: function () {
+            fetchMessage();
+        }
+    })
+});
+
+
 $("#pdf-meta").hide();
 $("#data-types").hide();
 
@@ -194,11 +209,11 @@ function getRectangles() {
                         if (!hasId('id', data[o].id, rects)) {
 
                             rects.push(data[o]);
-                            console.log("Object pushed: " + JSON.stringify(data[o]));
+                            // console.log("Object pushed: " + JSON.stringify(data[o]));
                         }
                     }
                 }
-                console.log("Received following rectangle list: " + additionalRectListJS);
+                // console.log("Received following rectangle list: " + additionalRectListJS);
             }
         },
         error: function () {
@@ -210,23 +225,6 @@ function getRectangles() {
     });
 }
 
-$("#do-refactor").on('click', function () {
-
-    var filteredRects = rects.filter(function (e) {
-        return e.marked === true
-    });
-    console.log(filteredRects);
-    $.ajax({
-        url: "/api/rectangles",
-        method: 'POST',
-        data: JSON.stringify(filteredRects),
-        contentType: 'application/json',
-        async: true
-    }).then(console.log("Then"),
-        fetchMessage()
-    );
-
-});
 
 function drawRedRec(x, y, w, h, rectNum) {
     var $cloned = $("#pageContainer > div > div.canvasWrapper > canvas[id^=page]:last").first().clone();
@@ -239,7 +237,7 @@ function drawRedRec(x, y, w, h, rectNum) {
     ctx.rect(SCALE_FIXED * x, SCALE_FIXED * y, SCALE_FIXED * w, SCALE_FIXED * h);
     ctx.stroke();
     rects[rectNum].drew = true;
-    console.log("Red rectangle has been drawn: " + rectNum);
+    // console.log("Red rectangle has been drawn: " + rectNum);
 }
 
 function drawBlackRec(x, y, w, h, rectNum) {
@@ -362,7 +360,7 @@ $("#draw").on('click', function drawRects() {
     $('.textLayer').click(function (e) {
         $('.textLayer').hide();
         if (collides(rects, e.pageX - BBoffsetX, e.pageY - BBoffsetY)) {
-            console.log("RecNum " + rectNum);
+            // console.log("RecNum " + rectNum);
             if (rectNum !== -1) {
                 if (rects[rectNum].marked === false) {
                     rects[rectNum].marked = true;
