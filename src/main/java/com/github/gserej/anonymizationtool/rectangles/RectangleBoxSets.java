@@ -21,6 +21,10 @@ public class RectangleBoxSets {
     @Setter
     private Set<RectangleBox> rectangleBoxSetMarked = new HashSet<>();
 
+    @Getter
+    @Setter
+    private Set<RectangleBox> rectangleBoxSetParsed = new HashSet<>();
+
     public void addRectangle(RectangleBox rectangleBox) {
         this.rectangleBoxSetOriginal.add(rectangleBox);
     }

@@ -2,6 +2,7 @@ package com.github.gserej.anonymizationtool.fileprocessing;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
+import com.github.gserej.anonymizationtool.messages.MessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -19,24 +20,15 @@ public class FileUploadController {
     private final StorageService storageService;
     private final FileProcessingService fileProcessingService;
 
-    private String message;
-
     @Autowired
-    public FileUploadController(StorageService storageService, FileProcessingService fileProcessingService) {
+    public FileUploadController(StorageService storageService, FileProcessingService fileProcessingService, MessageService messageService) {
         this.storageService = storageService;
         this.fileProcessingService = fileProcessingService;
     }
 
-
     @GetMapping("/")
     public String getMainPage() {
         return "pageviewer.html";
-    }
-
-    @ResponseBody
-    @GetMapping("/api/message")
-    public String getMessage() {
-        return this.message;
     }
 
     @ResponseBody
@@ -49,7 +41,6 @@ public class FileUploadController {
                 .filter(f -> f.endsWith(".pdf"))
                 .findFirst().orElse(null);
     }
-
 
     @ResponseBody
     @GetMapping("/files/{filename:.+}")
@@ -65,12 +56,8 @@ public class FileUploadController {
     public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile) {
         storageService.store(multipartFile);
 
-        boolean wrongExtension = fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename());
-        if (wrongExtension) {
-            message = "You have uploaded the file with a wrong file extension.";
-        } else {
-            message = "You successfully uploaded " + multipartFile.getOriginalFilename() + "!";
-        }
+        fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename());
+
         return "redirect:/";
     }
 

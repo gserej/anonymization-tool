@@ -6,11 +6,9 @@ import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageLocationsExtractionService;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
 import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
+import com.github.gserej.anonymizationtool.messages.MessageService;
 import com.github.gserej.anonymizationtool.rectangles.RectangleBoxSets;
 import com.github.gserej.anonymizationtool.rectangles.WordsPrintingService;
-import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 
 @Service
 @Slf4j
@@ -32,10 +29,7 @@ public class FileProcessingServiceImpl implements FileProcessingService {
     private ImageLocationsExtractionService imageLocationsExtractionService;
     private WordsPrintingService wordsPrintingService;
     private RectangleBoxSets rectangleBoxSets;
-
-    @Getter
-    @Setter
-    private Set<RectangleBox> parsedRectangleSet;
+    private MessageService messageService;
 
 
     @Autowired
@@ -43,7 +37,7 @@ public class FileProcessingServiceImpl implements FileProcessingService {
                                      ImageToPdfConversionService imageToPdfConversionService,
                                      RectangleParsingService rectangleParsingService,
                                      ImageLocationsExtractionService imageLocationsExtractionService,
-                                     WordsPrintingService wordsPrintingService, RectangleBoxSets rectangleBoxSets) {
+                                     WordsPrintingService wordsPrintingService, RectangleBoxSets rectangleBoxSets, MessageService messageService) {
         this.storageService = storageService;
         this.documentMetaInfo = documentMetaInfo;
         this.ocrService = ocrService;
@@ -52,15 +46,12 @@ public class FileProcessingServiceImpl implements FileProcessingService {
         this.imageLocationsExtractionService = imageLocationsExtractionService;
         this.wordsPrintingService = wordsPrintingService;
         this.rectangleBoxSets = rectangleBoxSets;
+        this.messageService = messageService;
     }
 
-    @Override
-    public Set<RectangleBox> getRectSet() {
-        return parsedRectangleSet;
-    }
 
     @Override
-    public boolean processUploadedFile(String filename) {
+    public void processUploadedFile(String filename) {
         File fileToProcess = storageService.loadAsFile(filename);
         String fileExtension = FilenameUtils.getExtension(filename);
 
@@ -68,19 +59,22 @@ public class FileProcessingServiceImpl implements FileProcessingService {
             log.info("PDF file found!");
             documentMetaInfo.setDocumentName(filename);
             processPdfFile(fileToProcess);
-            return false;
+            messageService.setCurrentMessage(messageService.getSUCCESSFUL_UPLOAD() + filename + "!");
+
         } else if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("png")) {
             log.info("Image file found!");
             processImageFile(fileToProcess);
-            return false;
+            messageService.setCurrentMessage(messageService.getSUCCESSFUL_UPLOAD() + filename + "!");
+
         } else {
             log.info("File with a wrong extension found!");
-            return true;
+            messageService.setCurrentMessage(messageService.getWRONG_EXTENSION());
+
         }
     }
 
-    private void processPdfFile(File fileToProcess) {
 
+    private void processPdfFile(File fileToProcess) {
 
         try {
             wordsPrintingService.getWordsLocations(fileToProcess);
@@ -91,10 +85,11 @@ public class FileProcessingServiceImpl implements FileProcessingService {
             log.info("Extracted words from PDF page. Starting parsing them.");
         }
 
-        parsedRectangleSet = rectangleParsingService
-                .parseRectangleBoxSet(rectangleBoxSets.getRectangleBoxSetOriginal());
+        rectangleBoxSets.setRectangleBoxSetParsed(rectangleParsingService
+                .parseRectangleBoxSet(rectangleBoxSets.getRectangleBoxSetOriginal()));
 
-        log.info("Parsed rectangles extracted from text to be sent to the page: " + parsedRectangleSet.toString());
+        log.info("Parsed rectangles extracted from text to be sent to the page: "
+                + rectangleBoxSets.getRectangleBoxSetParsed().toString());
 
         Runnable r = () -> {
             log.info("Trying to find images embedded in PDF file: starting...");
@@ -104,10 +99,11 @@ public class FileProcessingServiceImpl implements FileProcessingService {
                 log.info("Failed to extract images from document: " + e);
             }
 
-            parsedRectangleSet = rectangleParsingService
-                    .parseRectangleBoxSet(rectangleBoxSets.getRectangleBoxSetOriginal());
+            rectangleBoxSets.setRectangleBoxSetParsed(rectangleParsingService
+                    .parseRectangleBoxSet(rectangleBoxSets.getRectangleBoxSetOriginal()));
 
-            log.info("Additional rectangles extracted from image(s) to be sent sent to the page: " + parsedRectangleSet.toString());
+            log.info("Additional rectangles extracted from image(s) to be sent sent to the page: "
+                    + rectangleBoxSets.getRectangleBoxSetParsed().toString());
 
         };
         new Thread(r).start();
@@ -132,10 +128,10 @@ public class FileProcessingServiceImpl implements FileProcessingService {
                         return;
                     }
                     log.info("Words parsing: starting...");
-                    parsedRectangleSet = rectangleParsingService
-                            .parseRectangleBoxSet(rectangleBoxSets.getRectangleBoxSetOriginal());
+                    rectangleBoxSets.setRectangleBoxSetParsed(rectangleParsingService
+                            .parseRectangleBoxSet(rectangleBoxSets.getRectangleBoxSetOriginal()));
                     log.info("Parsed rectangles extracted from single image to be sent to the page: "
-                            + parsedRectangleSet.toString());
+                            + rectangleBoxSets.getRectangleBoxSetParsed().toString());
                 } else {
                     log.error("OCR processing: fail");
                 }

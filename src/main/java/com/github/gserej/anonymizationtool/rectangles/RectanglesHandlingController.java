@@ -1,15 +1,15 @@
 package com.github.gserej.anonymizationtool.rectangles;
 
-import com.github.gserej.anonymizationtool.fileprocessing.FileProcessingService;
+import com.github.gserej.anonymizationtool.messages.MessageService;
 import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Set;
 
@@ -18,30 +18,27 @@ import java.util.Set;
 public class RectanglesHandlingController {
 
     private MarkedRectanglesProcessingService markedRectanglesProcessingService;
-    private FileProcessingService fileProcessingService;
+    private MessageService messageService;
+    private RectangleBoxSets rectangleBoxSets;
 
     @Autowired
-    public RectanglesHandlingController(MarkedRectanglesProcessingService markedRectanglesProcessingService, FileProcessingService fileProcessingService) {
+    public RectanglesHandlingController(MarkedRectanglesProcessingService markedRectanglesProcessingService, MessageService messageService, RectangleBoxSets rectangleBoxSets) {
         this.markedRectanglesProcessingService = markedRectanglesProcessingService;
-        this.fileProcessingService = fileProcessingService;
+        this.messageService = messageService;
+        this.rectangleBoxSets = rectangleBoxSets;
     }
 
-
     @PostMapping(value = "/api/rectangles")
-    public String postJson(@RequestBody Set<RectangleBox> rectangleBoxesMarked, RedirectAttributes redirectAttributes) {
-
+    public ResponseEntity<?> postJson(@RequestBody Set<RectangleBox> rectangleBoxesMarked) {
         markedRectanglesProcessingService.processReceivedRectangleSet(rectangleBoxesMarked);
-
-        redirectAttributes.addFlashAttribute("fileReadyMessage",
-                "Your file was converted, click the link below to download it.");
-
-        return "redirect:/";
+        messageService.setCurrentMessage(messageService.getDOWNLOAD_LINK_READY());
+        return ResponseEntity.ok("link created");
     }
 
     @ResponseBody
     @GetMapping("/api/rectangles")
     public Set<RectangleBox> sendRectangles() {
-        return fileProcessingService.getRectSet();
+        return rectangleBoxSets.getRectangleBoxSetParsed();
     }
 
 }

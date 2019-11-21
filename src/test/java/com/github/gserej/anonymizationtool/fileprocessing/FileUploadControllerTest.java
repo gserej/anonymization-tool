@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -46,7 +45,6 @@ class FileUploadControllerTest {
     void shouldSaveUploadedFile() throws Exception {
         MockMultipartFile multipartFile = new MockMultipartFile("file", "test.pdf",
                 "text/plain", "Spring Framework".getBytes());
-        when(fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename())).thenReturn(false);
 
         this.mvc.perform(multipart("/").file(multipartFile))
                 .andExpect(status().isFound())
