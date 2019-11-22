@@ -64,6 +64,7 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
     }
 
     private void addRectangleToNewSet(RectangleBox rectangleBox) {
+        rectangleBox.setWord("null");
         rectangleBoxSetParsed.add(rectangleBox);
     }
 }
