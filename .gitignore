@@ -30,5 +30,5 @@ build/
 ### VS Code ###
 .vscode/
 
-/upload-dir/
-/uploaded-file/**
+!/uploaded-files/**
+uploaded-files/**
