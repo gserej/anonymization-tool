@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 public class MessageService {
 
     @Getter
+    private final String EMPTY_MESSAGE = "";
+    @Getter
     private final String WRONG_EXTENSION = "You have uploaded the file with a wrong file extension.";
     @Getter
     private final String SUCCESSFUL_UPLOAD = "You successfully uploaded ";

@@ -31,7 +31,11 @@ var SCALE = 1.0;
 var SCALE_FIXED = SCALE / 0.75;
 var number_of_pages;
 
-var container = document.getElementById('pageContainer');
+var DEFAULT_URL;
+var message;
+var rects = [];
+
+var container = $('#pageContainer')[0];
 var pdf_prev = $("#pdf-prev");
 var pdf_next = $("#pdf-next");
 
@@ -66,20 +70,20 @@ function disableEnablePrevNext() {
 
 disableEnablePrevNext();
 
-var DEFAULT_URL;
-var message;
 
-$.ajax({
-    type: "get",
-    url: '/api/files',
-    success: function (data) {
-        if (data !== "") {
-            DEFAULT_URL = data;
-            $("#file-link").attr("href", data).html(data);
-            render();
+function fetchFiles() {
+    $.ajax({
+        type: "get",
+        url: '/api/files',
+        success: function (data) {
+            if (data !== "") {
+                DEFAULT_URL = data;
+                $("#file-link").attr("href", data).html(data);
+                render();
+            }
         }
-    }
-});
+    });
+}
 
 function fetchMessage() {
     $.ajax({
@@ -94,14 +98,15 @@ function fetchMessage() {
     });
 }
 
+fetchFiles();
 fetchMessage();
 
 $("#do-refactor").on('click', function () {
 
+    $("#do-refactor").prop("disabled", true);
     var filteredRects = rects.filter(function (e) {
         return e.marked === true
     });
-    // console.log(filteredRects);
     $.ajax({
         url: "/api/rectangles",
         method: 'POST',
@@ -113,6 +118,19 @@ $("#do-refactor").on('click', function () {
     })
 });
 
+$("#start-over").on('click', function () {
+
+    $.ajax({
+        url: "/api/startover",
+        method: 'GET',
+        contentType: 'application/json',
+        success: function () {
+            location.reload();
+            fetchMessage();
+            $("#message").html("");
+        }
+    })
+});
 
 $("#pdf-meta").hide();
 $("#data-types").hide();
@@ -127,7 +145,7 @@ $(document).ready(
             }
         );
     });
-var rects = [];
+
 
 function render() {
     var loadingTask = pdfjsLib.getDocument({

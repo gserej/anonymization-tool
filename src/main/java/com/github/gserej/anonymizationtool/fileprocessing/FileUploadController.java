@@ -19,16 +19,26 @@ public class FileUploadController {
 
     private final StorageService storageService;
     private final FileProcessingService fileProcessingService;
+    private final MessageService messageService;
 
     @Autowired
     public FileUploadController(StorageService storageService, FileProcessingService fileProcessingService, MessageService messageService) {
         this.storageService = storageService;
         this.fileProcessingService = fileProcessingService;
+        this.messageService = messageService;
     }
 
     @GetMapping("/")
     public String getMainPage() {
         return "pageviewer.html";
+    }
+
+    @ResponseBody
+    @GetMapping("/api/startover")
+    public String startOver() {
+        messageService.setCurrentMessage(messageService.getEMPTY_MESSAGE());
+        storageService.deleteAll();
+        return "ok";
     }
 
     @ResponseBody
