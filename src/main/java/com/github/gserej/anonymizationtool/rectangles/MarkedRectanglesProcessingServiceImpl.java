@@ -38,7 +38,7 @@ public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesPr
         log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
         rectangleBoxSets.setRectangleBoxSetMarked(rectangleBoxesMarked);
 
-        File pdfFileToProcess = storageService.loadAsFile(documentMetaInfo.getDocumentName());
+        File pdfFileToProcess = storageService.load(documentMetaInfo.getDocumentName()).toFile();
         log.info("Loaded PDF file: " + pdfFileToProcess.getName());
 
         try {

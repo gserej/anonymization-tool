@@ -52,7 +52,7 @@ public class FileProcessingServiceImpl implements FileProcessingService {
 
     @Override
     public void processUploadedFile(String filename) {
-        File fileToProcess = storageService.loadAsFile(filename);
+        File fileToProcess = storageService.load(filename).toFile();
         String fileExtension = FilenameUtils.getExtension(filename);
 
         if (fileExtension.equalsIgnoreCase("pdf")) {
