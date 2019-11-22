@@ -57,8 +57,8 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
     private static float pageHeight;
 
     private static Path rootLocation;
-
     private OCRService ocrService;
+    private boolean imagesFound = false;
 
     @Autowired
     public ImageLocationsExtractionServiceImpl(StorageProperties properties, OCRService ocrService) {
@@ -90,8 +90,14 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
                 setPageHeight(page.getMediaBox().getHeight());
                 processPage(page);
                 pageNum++;
+
             }
-            log.info("Extracted images from the file.");
+            if (imagesFound) {
+                log.info("Extracted images from the file.");
+            } else {
+                log.info("No images were found within the file.");
+            }
+            imagesFound = false;
         }
 
     }
@@ -115,6 +121,7 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
                 float imageXScale = ctmNew.getScalingFactorX();
                 float imageYScale = ctmNew.getScalingFactorY();
 
+                imagesFound = true;
                 EmbeddedImageProperties embeddedImageProperties = new EmbeddedImageProperties(
                         ctmNew.getTranslateX(),
                         ctmNew.getTranslateY(),
