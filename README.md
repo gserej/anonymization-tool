@@ -4,12 +4,14 @@
 
 A Spring Boot based application created to help users to speed up the process of document redaction.
 
-When the user upload either a PDF or an image file, content of the document is displayed on the main page and meanwhile
- the back-end application try to extract all the words from the document, categorize them based on the type 
- (dates, numbers, etc.) and send information about words locations to the front-end page. Next the user can select the
-  type of information to redact and red boxes are displayed around these words. User then can click on boxes to turn them into 
- black ones to confirm selection. At the end when user clicks on the "Do anonymization" button, locations of marked boxes are sent
- back to the Spring application and it produces a link to the redacted PDF file.
+When a user upload either a PDF or an image file, content of it is displayed on the main page and meanwhile
+ the back-end application extracts all the words from the document, try to categorize them based on the type 
+ (dates, phone numbers, first names etc.) and expose information about words locations to the front-end page.
+  Next the user can select the type of information to redact and red boxes are displayed around these words.
+   User then can click on boxes to turn them into black ones to confirm selection.
+    At the end when user clicks on the "Do anonymization" button, locations of marked boxes are sent back to the
+     Spring application and it generates a redacted PDF file and expose a download link.
+   
 
 Used technology stack:
 - Java
