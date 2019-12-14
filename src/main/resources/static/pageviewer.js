@@ -85,6 +85,21 @@ function fetchFiles() {
     });
 }
 
+function fetchUUID() {
+    $.ajax({
+        type: "get",
+        url: '/api/uuid',
+        success: function (uuid) {
+            if (uuid !== "") {
+                if (sessionStorage.getItem("app-UUID") === null) {
+                    console.log(uuid);
+                    sessionStorage.setItem("app-UUID", uuid);
+                }
+            }
+        }
+    });
+}
+
 function fetchMessage() {
     $.ajax({
         type: "get",
@@ -98,6 +113,7 @@ function fetchMessage() {
     });
 }
 
+fetchUUID();
 fetchFiles();
 fetchMessage();
 
