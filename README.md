@@ -21,6 +21,9 @@ Used technology stack:
 - Tess4J
 - PDFBox
 - JUnit 5
+- JavaScript
+- jQuery
+- Bootstrap 4
 and more...
 
 Running the project locally
