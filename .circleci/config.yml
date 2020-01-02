@@ -39,3 +39,7 @@ jobs:
 
       # run tests!
       - run: mvn test
+
+    branches:
+      only:
+        - master
