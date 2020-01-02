@@ -74,7 +74,7 @@ disableEnablePrevNext();
 function fetchFiles() {
     $.ajax({
         type: "get",
-        url: '/api/files',
+        url: '/api/files/09c9591e-d82e-4924-80a5-e4b6cfe2e90b',
         success: function (data) {
             if (data !== "") {
                 DEFAULT_URL = data;

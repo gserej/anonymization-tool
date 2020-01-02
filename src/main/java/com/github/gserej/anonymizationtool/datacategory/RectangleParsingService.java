@@ -1,6 +1,6 @@
 package com.github.gserej.anonymizationtool.datacategory;
 
-import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
+import com.github.gserej.anonymizationtool.rectangles.RectangleBox;
 
 import java.util.Set;
 

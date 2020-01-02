@@ -4,7 +4,8 @@ import com.github.gserej.anonymizationtool.datacategory.CsvNameExtractionService
 import com.github.gserej.anonymizationtool.datacategory.NumberTypeValidationService;
 import com.github.gserej.anonymizationtool.datacategory.PhoneNumberValidationService;
 import com.github.gserej.anonymizationtool.datacategory.RectangleParsingService;
-import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
+import com.github.gserej.anonymizationtool.rectangles.RectangleBox;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
     private NumberTypeValidationService numberTypeValidationService;
     private CsvNameExtractionService csvNameExtractionService;
     private PhoneNumberValidationService phoneNumberValidationService;
+    private Set<RectangleBox> rectangleBoxSetParsed = new HashSet<>();
 
     public RectangleParsingServiceImpl(NumberTypeValidationService numberTypeValidationService,
                                        CsvNameExtractionService csvNameExtractionService,
@@ -25,8 +27,6 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
         this.csvNameExtractionService = csvNameExtractionService;
         this.phoneNumberValidationService = phoneNumberValidationService;
     }
-
-    private Set<RectangleBox> rectangleBoxSetParsed = new HashSet<>();
 
     @Override
     public Set<RectangleBox> parseRectangleBoxSet(Set<RectangleBox> rectangleSetToParse) {
@@ -47,9 +47,11 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
                     } else if (GenericValidator.isDate(word, null)) {
                         rectangleBox.setTypeOfData(8);
                         addRectangleToNewSet(rectangleBox);
-                    } else if (phoneNumberValidationService.isValidPolishPhoneNumber(word)) {
-                        rectangleBox.setTypeOfData(6);
-                        addRectangleToNewSet(rectangleBox);
+                    } else if (StringUtils.isNumeric(word)) {
+                        if (phoneNumberValidationService.isValidPolishPhoneNumber(word)) {
+                            rectangleBox.setTypeOfData(6);
+                            addRectangleToNewSet(rectangleBox);
+                        }
                     } else if (csvNameExtractionService.isPolishFirstOrLastName(word)) {
                         rectangleBox.setTypeOfData(5);
                         addRectangleToNewSet(rectangleBox);

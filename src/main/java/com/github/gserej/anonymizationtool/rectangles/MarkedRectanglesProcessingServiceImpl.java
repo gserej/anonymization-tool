@@ -1,15 +1,16 @@
 package com.github.gserej.anonymizationtool.rectangles;
 
-import com.github.gserej.anonymizationtool.filestorage.DocumentMetaInfo;
+import com.github.gserej.anonymizationtool.filestorage.Document;
+import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
-import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -17,46 +18,45 @@ public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesPr
 
 
     private final StorageService storageService;
-    private final DocumentMetaInfo documentMetaInfo;
+    private final DocumentRepository documentRepository;
     private ImageToPdfConversionService imageToPdfConversionService;
-    private WordsPrintingService wordsPrintingService;
-    private RectangleBoxSets rectangleBoxSets;
+    private WordsDrawingService wordsDrawingService;
 
 
-    public MarkedRectanglesProcessingServiceImpl(ImageToPdfConversionService imageToPdfConversionService, WordsPrintingService wordsPrintingService, StorageService storageService, DocumentMetaInfo documentMetaInfo, RectangleBoxSets rectangleBoxSets) {
+    public MarkedRectanglesProcessingServiceImpl(ImageToPdfConversionService imageToPdfConversionService,
+                                                 WordsDrawingService wordsDrawingService, StorageService storageService, DocumentRepository documentRepository) {
         this.imageToPdfConversionService = imageToPdfConversionService;
-        this.wordsPrintingService = wordsPrintingService;
+        this.wordsDrawingService = wordsDrawingService;
         this.storageService = storageService;
-        this.documentMetaInfo = documentMetaInfo;
-        this.rectangleBoxSets = rectangleBoxSets;
+        this.documentRepository = documentRepository;
     }
 
 
     @Override
-    public void processReceivedRectangleSet(Set<RectangleBox> rectangleBoxesMarked) {
+    public void processReceivedRectangleSet(Set<RectangleBox> rectangleBoxesMarked, UUID uuid) {
 
         log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
-        rectangleBoxSets.setRectangleBoxSetMarked(rectangleBoxesMarked);
-
-        File pdfFileToProcess = storageService.load(documentMetaInfo.getDocumentName()).toFile();
+        Document document = documentRepository.findById(uuid).orElseThrow();
+        document.setParsedRectangles(rectangleBoxesMarked);
+        documentRepository.save(document);
+        File pdfFileToProcess = storageService.load(document.getDocumentName(), uuid).toFile();
         log.info("Loaded PDF file: " + pdfFileToProcess.getName());
 
         try {
-            wordsPrintingService.drawBoxesAroundMarkedWords(pdfFileToProcess);
+            wordsDrawingService.drawBoxesAroundMarkedWords(pdfFileToProcess, uuid);
         } catch (IOException e) {
-            log.error("Error drawing boxes around words" + e);
+            log.error("Exception during drawing boxes around words" + e);
         }
         try {
-            log.info("List of images: " + documentMetaInfo.getImageList().toString());
+            log.info("List of images: " + document.getImageList().toString());
             String pathToProcessedPdf = imageToPdfConversionService.createPdfFromMultipleImages(
-                    documentMetaInfo.getDocumentName(), pdfFileToProcess);
+                    document.getDocumentName(), pdfFileToProcess, uuid);
 
-            storageService.storeAsFile(new File(pathToProcessedPdf));
+            storageService.storeAsFile(new File(pathToProcessedPdf), uuid);
             log.info("Document is ready to download.");
         } catch (IOException e) {
-            log.error("Error creating PDF file from images.");
-        } finally {
-            documentMetaInfo.setDocumentName(null);
+            log.error("Exception during creating PDF file from images.");
+
         }
     }
 }

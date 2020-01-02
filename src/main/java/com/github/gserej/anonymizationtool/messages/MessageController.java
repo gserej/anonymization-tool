@@ -1,19 +1,25 @@
 package com.github.gserej.anonymizationtool.messages;
 
+import com.github.gserej.anonymizationtool.filestorage.Document;
+import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 public class MessageController {
 
-    private MessageService messageService;
+    private DocumentRepository documentRepository;
 
-    public MessageController(MessageService messageService) {
-        this.messageService = messageService;
+    public MessageController(DocumentRepository documentRepository) {
+        this.documentRepository = documentRepository;
     }
 
-    @GetMapping("/api/message")
-    public String getMessage() {
-        return messageService.getCurrentMessage();
+    @GetMapping("/api/message/{uuid}")
+    public String getMessage(@PathVariable("uuid") UUID uuid) {
+        Document document = documentRepository.findById(uuid).orElseThrow();
+        return document.getCurrentMessage();
     }
 }

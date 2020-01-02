@@ -1,9 +1,10 @@
 package com.github.gserej.anonymizationtool.imageprocessing.impl;
 
+import com.github.gserej.anonymizationtool.filestorage.Document;
+import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
 import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
 import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
-import com.github.gserej.anonymizationtool.rectangles.RectangleBoxSets;
-import com.github.gserej.anonymizationtool.rectangles.model.RectangleBox;
+import com.github.gserej.anonymizationtool.rectangles.RectangleBox;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.ITesseract;
@@ -18,21 +19,25 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Service
 public class OCRServiceTesseractImpl implements OCRService {
 
-    private RectangleBoxSets rectangleBoxSets;
+    private DocumentRepository documentRepository;
 
     private final int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
     @Value("${tessdata.path}")
     String tessdataPathString;
 
-    public OCRServiceTesseractImpl(RectangleBoxSets rectangleBoxSets) {
-        this.rectangleBoxSets = rectangleBoxSets;
+    public OCRServiceTesseractImpl(DocumentRepository documentRepository) {
+        this.documentRepository = documentRepository;
     }
+
 
     private ITesseract initOcr() {
         ITesseract instance = new Tesseract();
@@ -48,7 +53,7 @@ public class OCRServiceTesseractImpl implements OCRService {
     }
 
     @Override
-    public boolean doOcrOnSingleImageFile(File imageFile, float imageRatio) {
+    public void doOcrOnSingleImageFile(File imageFile, float imageRatio, UUID uuid) {
 
         ITesseract instance = initOcr();
         if (instance != null) {
@@ -56,6 +61,9 @@ public class OCRServiceTesseractImpl implements OCRService {
                 BufferedImage bi = ImageIO.read(imageFile);
 
                 List<Word> wordList = instance.getWords(bi, level);
+
+                Document document = documentRepository.findById(uuid).orElseThrow();
+                Set<RectangleBox> rectanglesFromImage = new HashSet<>();
 
                 for (Word word : wordList) {
                     RectangleBox rectangleBox = new RectangleBox(false,
@@ -66,20 +74,20 @@ public class OCRServiceTesseractImpl implements OCRService {
                             imageRatio * (float) word.getBoundingBox().getWidth(),
                             imageRatio * (float) word.getBoundingBox().getHeight(),
                             1, word.getText(), 1);
-                    rectangleBoxSets.addRectangle(rectangleBox);
+                    rectanglesFromImage.add(rectangleBox);
                 }
-                return true;
+                document.setOriginalRectangles(rectanglesFromImage);
+                documentRepository.save(document);
             } catch (NullPointerException e) {
                 log.error("NullPointerException. Couldn't find a words in image: " + e);
             } catch (IOException e) {
                 log.error("IO Exception: " + e);
             }
         }
-        return false;
     }
 
     @Override
-    public void doOcrOnEmbeddedImageFiles(File imageFile, EmbeddedImageProperties embeddedImageProperties) {
+    public void doOcrOnEmbeddedImageFiles(File imageFile, EmbeddedImageProperties embeddedImageProperties, UUID uuid) {
 
         ITesseract instance = initOcr();
 
@@ -93,6 +101,8 @@ public class OCRServiceTesseractImpl implements OCRService {
             try {
                 BufferedImage bi = ImageIO.read(imageFile);
                 List<Word> wordList = instance.getWords(bi, level);
+                Document document = documentRepository.findById(uuid).orElseThrow();
+                Set<RectangleBox> rectanglesFromImage = new HashSet<>();
                 for (Word word : wordList) {
                     RectangleBox rectangleBox = new RectangleBox(false,
                             false,
@@ -102,8 +112,11 @@ public class OCRServiceTesseractImpl implements OCRService {
                             (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
                             (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
                             1, word.getText(), Math.round(pageNum));
-                    rectangleBoxSets.addRectangle(rectangleBox);
+                    rectanglesFromImage.add(rectangleBox);
                 }
+                //todo - change method to add boxes instead of replacing them
+                document.setOriginalRectangles(rectanglesFromImage);
+                documentRepository.save(document);
             } catch (IOException e) {
                 log.error("IO exception: " + e);
             }

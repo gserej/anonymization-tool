@@ -2,7 +2,6 @@ package com.github.gserej.anonymizationtool.fileprocessing;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
-import com.github.gserej.anonymizationtool.messages.MessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -13,19 +12,20 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 
+import java.util.UUID;
+
 @Slf4j
 @Controller
 public class FileUploadController {
 
     private final StorageService storageService;
     private final FileProcessingService fileProcessingService;
-    private final MessageService messageService;
+
 
     @Autowired
-    public FileUploadController(StorageService storageService, FileProcessingService fileProcessingService, MessageService messageService) {
+    public FileUploadController(StorageService storageService, FileProcessingService fileProcessingService) {
         this.storageService = storageService;
         this.fileProcessingService = fileProcessingService;
-        this.messageService = messageService;
     }
 
     @GetMapping("/")
@@ -34,39 +34,38 @@ public class FileUploadController {
     }
 
     @ResponseBody
-    @GetMapping("/api/startover")
+    @GetMapping("/api/startover/")
     public String startOver() {
-        messageService.setCurrentMessage(messageService.getEMPTY_MESSAGE());
         storageService.deleteAll();
         return "ok";
     }
 
     @ResponseBody
-    @GetMapping("/api/files")
-    public String getFileLocation() {
-        return storageService.loadAll().map(
+    @GetMapping("/api/files/{uuid}")
+    public String getFileLocation(@PathVariable("uuid") UUID uuid) {
+        return storageService.loadAll(uuid).map(
                 path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
-                        "serveFile", path.getFileName().toString())
+                        "serveFile", uuid, path.getFileName().toString())
                         .build().toString())
                 .filter(f -> f.endsWith(".pdf"))
                 .findFirst().orElse(null);
     }
 
     @ResponseBody
-    @GetMapping("/files/{filename:.+}")
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
+    @GetMapping("api/files/{uuid}/{filename:.+}")
+    public ResponseEntity<Resource> serveFile(@PathVariable("uuid") UUID uuid, @PathVariable("filename") String filename) {
 
-        Resource file = storageService.loadAsResource(filename);
+        Resource file = storageService.loadAsResource(filename, uuid);
 
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
     }
 
-    @PostMapping("/")
-    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile) {
-        storageService.store(multipartFile);
+    @PostMapping("/api/files/{uuid}")
+    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile, @PathVariable("uuid") UUID uuid) {
+        storageService.store(multipartFile, uuid);
 
-        fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename());
+        fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename(), uuid);
 
         return "redirect:/";
     }
