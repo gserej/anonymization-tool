@@ -18,7 +18,7 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
     private NumberTypeValidationService numberTypeValidationService;
     private CsvNameExtractionService csvNameExtractionService;
     private PhoneNumberValidationService phoneNumberValidationService;
-    private Set<RectangleBox> rectangleBoxSetParsed = new HashSet<>();
+
 
     public RectangleParsingServiceImpl(NumberTypeValidationService numberTypeValidationService,
                                        CsvNameExtractionService csvNameExtractionService,
@@ -31,32 +31,34 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
     @Override
     public Set<RectangleBox> parseRectangleBoxSet(Set<RectangleBox> rectangleSetToParse) {
 
+        Set<RectangleBox> rectangleBoxSetParsed = new HashSet<>();
+
         for (RectangleBox rectangleBox : rectangleSetToParse) {
             if (!rectangleBox.isParsed()) {
                 String word = rectangleBox.getWord();
                 if (word.length() > 2) {
                     if (numberTypeValidationService.isValidPesel(word)) {
                         rectangleBox.setTypeOfData(2);
-                        addRectangleToNewSet(rectangleBox);
+                        rectangleBoxSetParsed.add(rectangleBox);
                     } else if (numberTypeValidationService.isValidNIP(word)) {
                         rectangleBox.setTypeOfData(3);
-                        addRectangleToNewSet(rectangleBox);
+                        rectangleBoxSetParsed.add(rectangleBox);
                     } else if (numberTypeValidationService.isValidREGON(word)) {
                         rectangleBox.setTypeOfData(4);
-                        addRectangleToNewSet(rectangleBox);
+                        rectangleBoxSetParsed.add(rectangleBox);
                     } else if (GenericValidator.isDate(word, null)) {
                         rectangleBox.setTypeOfData(8);
-                        addRectangleToNewSet(rectangleBox);
+                        rectangleBoxSetParsed.add(rectangleBox);
                     } else if (StringUtils.isNumeric(word)) {
                         if (phoneNumberValidationService.isValidPolishPhoneNumber(word)) {
                             rectangleBox.setTypeOfData(6);
-                            addRectangleToNewSet(rectangleBox);
+                            rectangleBoxSetParsed.add(rectangleBox);
                         }
                     } else if (csvNameExtractionService.isPolishFirstOrLastName(word)) {
                         rectangleBox.setTypeOfData(5);
-                        addRectangleToNewSet(rectangleBox);
+                        rectangleBoxSetParsed.add(rectangleBox);
                     } else if (word.equalsIgnoreCase("Lorem")) {
-                        addRectangleToNewSet(rectangleBox);
+                        rectangleBoxSetParsed.add(rectangleBox);
                     }
                 }
             }
@@ -65,8 +67,4 @@ public class RectangleParsingServiceImpl implements RectangleParsingService {
         return rectangleBoxSetParsed;
     }
 
-    private void addRectangleToNewSet(RectangleBox rectangleBox) {
-        rectangleBox.setWord("null");
-        rectangleBoxSetParsed.add(rectangleBox);
-    }
 }
