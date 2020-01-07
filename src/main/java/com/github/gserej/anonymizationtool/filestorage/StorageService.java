@@ -12,6 +12,8 @@ public interface StorageService {
 
     void init();
 
+    void createUuidFolder(UUID uuid);
+
     void store(MultipartFile file, UUID uuid);
 
     void storeAsFile(File file, UUID uuid);
