@@ -52,7 +52,7 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
                 float heightRatio = page.getCropBox().getHeight() / height;
                 float ratio = Math.min(widthRatio, heightRatio);
 
-                Document document = documentRepository.findById(uuid).orElseThrow();
+                Document document = new Document(uuid);
                 document.setImageRatio(ratio);
                 documentRepository.save(document);
 
