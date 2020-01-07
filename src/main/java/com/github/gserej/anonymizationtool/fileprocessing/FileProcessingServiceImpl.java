@@ -65,7 +65,12 @@ public class FileProcessingServiceImpl implements FileProcessingService {
     }
 
     private void saveDocumentInfo(String filename, UUID uuid) {
-        Document document = new Document(uuid);
+        Document document;
+        if (documentRepository.findById(uuid).isPresent()) {
+            document = documentRepository.findById(uuid).get();
+        } else {
+            document = new Document(uuid);
+        }
         document.setDocumentName(filename);
         document.setCurrentMessage(CurrentMessage.SUCCESSFUL_UPLOAD.getValue() + filename + "!");
         document.setOriginalRectangles(new HashSet<>());
