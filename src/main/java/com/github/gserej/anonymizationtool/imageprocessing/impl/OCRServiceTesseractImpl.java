@@ -102,7 +102,13 @@ public class OCRServiceTesseractImpl implements OCRService {
                 BufferedImage bi = ImageIO.read(imageFile);
                 List<Word> wordList = instance.getWords(bi, level);
                 Document document = documentRepository.findById(uuid).orElseThrow();
-                Set<RectangleBox> rectanglesFromImage = new HashSet<>();
+                Set<RectangleBox> rectanglesFromImage;
+                if (document.getOriginalRectangles() != null) {
+                    rectanglesFromImage = document.getOriginalRectangles();
+                } else {
+                    rectanglesFromImage = new HashSet<>();
+                }
+
                 for (Word word : wordList) {
                     RectangleBox rectangleBox = new RectangleBox(false,
                             false,
@@ -114,7 +120,6 @@ public class OCRServiceTesseractImpl implements OCRService {
                             1, word.getText(), Math.round(pageNum));
                     rectanglesFromImage.add(rectangleBox);
                 }
-                //todo - change method to add boxes instead of replacing them
                 document.setOriginalRectangles(rectanglesFromImage);
                 documentRepository.save(document);
             } catch (IOException e) {
