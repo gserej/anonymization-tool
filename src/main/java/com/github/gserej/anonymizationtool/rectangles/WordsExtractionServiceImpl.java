@@ -5,6 +5,7 @@ import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -15,10 +16,8 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -34,13 +33,10 @@ public class WordsExtractionServiceImpl implements WordsExtractionService {
     public void getWordsLocations(File file, UUID uuid) throws IOException {
         try (PDDocument document = PDDocument.load(file)) {
             if (!document.isEncrypted()) {
-                PDFTextStripper stripper = new PDFStripper(uuid, documentRepository);
+                PDFTextStripper stripper = new PrintTextLocations(uuid, documentRepository);
                 stripper.setSortByPosition(true);
-                Writer dummy = new OutputStreamWriter(new ByteArrayOutputStream());
                 for (int page = 0; page < document.getNumberOfPages(); ++page) {
-                    stripper.setStartPage(page + 1);
-                    stripper.setEndPage(page + 1);
-                    stripper.writeText(document, dummy);
+                    stripPage(page, stripper, document);
                 }
             }
         } catch (NullPointerException e) {
@@ -48,13 +44,25 @@ public class WordsExtractionServiceImpl implements WordsExtractionService {
         }
     }
 
+    private void stripPage(int page, PDFTextStripper stripper, PDDocument document) throws IOException {
+        stripper.setStartPage(page + 1);
+        PDPage pdPage = document.getPage(page);
+        AffineTransform flipAT = new AffineTransform();
+        flipAT.translate(0, pdPage.getBBox().getHeight());
+        flipAT.scale(1, -1);
+
+        Writer dummy = new OutputStreamWriter(new ByteArrayOutputStream());
+        stripper.setEndPage(page + 1);
+        stripper.writeText(document, dummy);
+    }
+
 }
 
-class PDFStripper extends PDFTextStripper {
+class PrintTextLocations extends PDFTextStripper {
     private UUID uuid;
     private DocumentRepository documentRepository;
 
-    public PDFStripper(UUID uuid, DocumentRepository documentRepository) throws IOException {
+    public PrintTextLocations(UUID uuid, DocumentRepository documentRepository) throws IOException {
         this.uuid = uuid;
         this.documentRepository = documentRepository;
     }
@@ -64,9 +72,11 @@ class PDFStripper extends PDFTextStripper {
         String wordSeparator = getWordSeparator();
         java.util.List<TextPosition> word = new ArrayList<>();
 
-
         Document document = documentRepository.findById(uuid).orElseThrow();
         Set<RectangleBox> originalRectangleSet = document.getOriginalRectangles();
+        if (originalRectangleSet == null) {
+            originalRectangleSet = new HashSet<>();
+        }
 
         int pageNumber = super.getCurrentPageNo();
         for (TextPosition text : textPositions) {
