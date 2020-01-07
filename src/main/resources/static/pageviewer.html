@@ -33,7 +33,6 @@ limitations under the License.
 
     <title>Anonymization tool</title>
 
-
 </head>
 
 <body class="h-100" tabindex="1">
@@ -44,12 +43,13 @@ limitations under the License.
             <h5>Please upload the PDF, JPG or PNG file.</h5>
         </div>
         <div id="upload-form">
-            <form action="/api/files/09c9591e-d82e-4924-80a5-e4b6cfe2e90b" enctype="multipart/form-data" method="POST">
+            <form action="/api/files" enctype="multipart/form-data" method="POST">
                 <div class="custom-file col-md-4 col-sm-6">
                     <input accept="application/pdf, image/jpeg, image/png" class="custom-file-input" id="customFile"
                            name="file"
                            type="file">
                     <label class="custom-file-label" for="customFile">Choose file</label>
+                    <input id="formUUID" name="uuid" type="hidden" value="XXXX"/>
                 </div>
                 <br>
                 <input class="btn btn-primary mt-2" disabled type="submit" value="Upload"/>
@@ -68,7 +68,7 @@ limitations under the License.
             </div>
             <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
             <button class="btn btn-outline-primary btn-sm" id="do-refactor">Do anonymization</button>
-            <!--            <button class="btn btn-outline-primary btn-sm" id="start-over">Start Over</button>-->
+            <button class="btn btn-outline-primary btn-sm" id="start-over">Start Over</button>
         </div>
 
     </div>
@@ -129,6 +129,7 @@ limitations under the License.
     $(".custom-file-input").on("change", function () {
         var fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        $("#formUUID").val(sessionStorage.getItem("app-UUID"));
     });
 </script>
 <script src="pageviewer.js"></script>
