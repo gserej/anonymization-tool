@@ -19,7 +19,10 @@ public class MessageController {
 
     @GetMapping("/api/message/{uuid}")
     public String getMessage(@PathVariable("uuid") UUID uuid) {
-        Document document = documentRepository.findById(uuid).orElseThrow();
-        return document.getCurrentMessage();
+        if (documentRepository.findById(uuid).isPresent()) {
+            Document document = documentRepository.findById(uuid).get();
+            return document.getCurrentMessage();
+        }
+        return "";
     }
 }
