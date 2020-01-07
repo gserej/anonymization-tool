@@ -34,15 +34,9 @@ public class FileUploadController {
     }
 
     @ResponseBody
-    @GetMapping("/api/startover/")
-    public String startOver() {
-        storageService.deleteAll();
-        return "ok";
-    }
-
-    @ResponseBody
     @GetMapping("/api/files/{uuid}")
     public String getFileLocation(@PathVariable("uuid") UUID uuid) {
+        storageService.createUuidFolder(uuid);
         return storageService.loadAll(uuid).map(
                 path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
                         "serveFile", uuid, path.getFileName().toString())
@@ -61,8 +55,8 @@ public class FileUploadController {
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
     }
 
-    @PostMapping("/api/files/{uuid}")
-    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile, @PathVariable("uuid") UUID uuid) {
+    @PostMapping("/api/files")
+    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile, @RequestParam UUID uuid) {
         storageService.store(multipartFile, uuid);
 
         fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename(), uuid);
