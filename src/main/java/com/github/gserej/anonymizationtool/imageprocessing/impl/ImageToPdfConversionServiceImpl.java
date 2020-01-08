@@ -71,7 +71,7 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
     @Override
     public String createPdfFromMultipleImages(String fileName, File originalDocument, UUID uuid) throws IOException {
 
-        if (!new File(rootLocation + "" + uuid + "/processedPdf").mkdirs())
+        if (!new File(rootLocation + "/" + uuid + "/processedPdf").mkdirs())
             log.info("A new temporary folder hasn't been created.");
 
         try (PDDocument doc = PDDocument.load(originalDocument)) {
@@ -83,7 +83,7 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
 
             for (String imageName : imagesNames) {
 
-                File file = new File(rootLocation + "" + uuid + "/tempImages/" + imageName);
+                File file = new File(rootLocation + "/" + uuid + "/tempImages/" + imageName);
                 imageFiles.add(file);
             }
 
@@ -96,7 +96,7 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
                 }
                 i++;
             }
-            String pdfPath = rootLocation + "" + uuid + "/processedPdf/" + FilenameUtils.removeExtension(fileName) + ".pdf";
+            String pdfPath = rootLocation + "/" + uuid + "/processedPdf/" + FilenameUtils.removeExtension(fileName) + ".pdf";
             doc.save(pdfPath);
             return pdfPath;
         }
