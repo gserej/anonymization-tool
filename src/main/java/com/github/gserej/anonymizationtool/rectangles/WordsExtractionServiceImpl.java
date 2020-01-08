@@ -115,7 +115,7 @@ class PrintTextLocations extends PDFTextStripper {
         String singleWord = builder.toString();
         AffineTransform at = text.getTextMatrix().createAffineTransform();
 
-        Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY() + bbox.getHeight() * 0.05f,
+        Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getUpperRightY() - bbox.getHeight() * 0.05f,
                 xadvance, bbox.getHeight() * 0.85f);
         if (font instanceof PDType3Font) {
             at.concatenate(font.getFontMatrix().createAffineTransform());
@@ -130,7 +130,7 @@ class PrintTextLocations extends PDFTextStripper {
                 false,
                 false,
                 (float) s.getBounds2D().getX(),
-                (float) s.getBounds2D().getY(),
+                text.getPageHeight() - (float) s.getBounds2D().getY(),
                 (float) s.getBounds2D().getWidth(),
                 (float) s.getBounds2D().getHeight(),
                 1, singleWord, page);
