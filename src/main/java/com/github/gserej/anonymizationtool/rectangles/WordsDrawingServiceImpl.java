@@ -36,37 +36,52 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
 @Service
-public class WordsDrawingServiceImpl extends PDFTextStripper implements WordsDrawingService {
-    private static final int SCALE = 8;
+public class WordsDrawingServiceImpl implements WordsDrawingService {
+
     private static Path rootLocation;
     private DocumentRepository documentRepository;
 
     @Autowired
-    public WordsDrawingServiceImpl(StorageProperties properties, DocumentRepository documentRepository) throws IOException {
+    public WordsDrawingServiceImpl(StorageProperties properties, DocumentRepository documentRepository) {
         rootLocation = Paths.get(properties.getLocation());
         this.documentRepository = documentRepository;
     }
 
     @Override
     public void drawBoxesAroundMarkedWords(File file, UUID uuid) throws IOException {
-        try (PDDocument document = PDDocument.load(file)) {
-            setSortByPosition(true);
-            for (int page = 0; page < document.getNumberOfPages(); ++page) {
-//                int pageNumber= (page + 1);
-                stripPage(page, document, uuid);
+        try (PDDocument pdDocument = PDDocument.load(file)) {
+            WordsDraw wordsDraw = new WordsDraw(rootLocation, documentRepository);
+            wordsDraw.setSortByPosition(true);
+            for (int page = 0; page < pdDocument.getNumberOfPages(); ++page) {
+                wordsDraw.stripPage(page, pdDocument, uuid);
             }
         } catch (NullPointerException e) {
             log.error("Null pointer exception loading PDF file " + e);
         }
     }
 
-    private void stripPage(int page, PDDocument document, UUID uuid) throws IOException {
+}
+
+@Slf4j
+class WordsDraw extends PDFTextStripper {
+
+    private static final int SCALE = 8;
+    private Path rootLocation;
+    private DocumentRepository documentRepository;
+
+    public WordsDraw(Path rootLocation, DocumentRepository documentRepository) throws IOException {
+        this.rootLocation = rootLocation;
+        this.documentRepository = documentRepository;
+    }
+
+    public void stripPage(int page, PDDocument document, UUID uuid) throws IOException {
         PDFRenderer pdfRenderer = new PDFRenderer(document);
         BufferedImage image = pdfRenderer.renderImage(page, SCALE);
         PDPage pdPage = document.getPage(page);
@@ -89,12 +104,16 @@ public class WordsDrawingServiceImpl extends PDFTextStripper implements WordsDra
         String imageFilename = documentInfo.getDocumentName();
         int pt = imageFilename.lastIndexOf('.');
         imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
-        if (!new File(rootLocation + "/tempImages/" + imageFilename).mkdirs())
+        if (!new File(rootLocation + "/" + uuid.toString() + "/tempImages/" + imageFilename).mkdirs())
             log.error("couldn't create /tempImages/ folder");
-        File file = new File(rootLocation + "/tempImages/" + imageFilename);
+        File file = new File(rootLocation + "/" + uuid.toString() + "/tempImages/" + imageFilename);
         ImageIO.write(image, "png", file);
-
-        List<String> imageList = documentInfo.getImageList();
+        List<String> imageList;
+        if (documentInfo.getImageList() == null) {
+            imageList = new ArrayList<>();
+        } else {
+            imageList = documentInfo.getImageList();
+        }
         imageList.add(file.getName());
         documentInfo.setImageList(imageList);
         documentRepository.save(documentInfo);
