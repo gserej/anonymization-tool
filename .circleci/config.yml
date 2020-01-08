@@ -8,6 +8,7 @@ jobs:
     docker:
       # specify the version you desire here
       - image: circleci/openjdk:14-jdk-buster
+      - image: circleci/redis:4.0.14
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -39,3 +40,7 @@ jobs:
 
       # run tests!
       - run: mvn test
+
+    branches:
+      only:
+        - master

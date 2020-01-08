@@ -8,12 +8,12 @@ import lombok.Setter;
 @Setter
 public class EmbeddedImageProperties {
 
-    float positionX;
-    float positionY;
-    float sizeX;
-    float sizeY;
-    int pageNumber;
-    float pageHeight;
+    private float positionX;
+    private float positionY;
+    private float sizeX;
+    private float sizeY;
+    private int pageNumber;
+    private float pageHeight;
 
     public EmbeddedImageProperties(float positionX, float positionY, float sizeX, float sizeY, int pageNumber, float pageHeight) {
         this.positionX = positionX;

@@ -45,20 +45,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
 public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine implements ImageLocationsExtractionService {
-    @Setter
-    @Getter
-    private static int pageNum;
-    @Setter
-    @Getter
-    private static float pageHeight;
-
     private static Path rootLocation;
+
     private OCRService ocrService;
-    private boolean imagesFound = false;
 
     @Autowired
     public ImageLocationsExtractionServiceImpl(StorageProperties properties, OCRService ocrService) {
@@ -66,40 +60,50 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
         this.ocrService = ocrService;
     }
 
+    @Override
+    public void extractImages(File file, UUID uuid) throws IOException {
 
-    private void init() {
+        try (PDDocument document = PDDocument.load(file)) {
+            PdfImage pdfImage = new PdfImage(rootLocation, ocrService, uuid);
+            pdfImage.init();
+            int pageNum = 1;
+            //noinspection ResultOfMethodCallIgnored
+            new File(rootLocation + "/" + uuid + "/extractedImages").mkdirs();
+            for (PDPage page : document.getPages()) {
+                pdfImage.setPageNum(pageNum);
+                pdfImage.setPageHeight(page.getMediaBox().getHeight());
+                pdfImage.processPage(page);
+                pageNum++;
+            }
+        }
+    }
+}
+
+@Slf4j
+class PdfImage extends PDFStreamEngine {
+    private static Path rootLocation;
+    private OCRService ocrService;
+    @Setter
+    @Getter
+    private int pageNum;
+    @Setter
+    @Getter
+    private float pageHeight;
+    private UUID uuid;
+
+    public PdfImage(Path rootLocation, OCRService ocrService, UUID uuid) {
+        PdfImage.rootLocation = rootLocation;
+        this.ocrService = ocrService;
+        this.uuid = uuid;
+    }
+
+    void init() {
         addOperator(new Concatenate());
         addOperator(new DrawObject());
         addOperator(new SetGraphicsStateParameters());
         addOperator(new Save());
         addOperator(new Restore());
         addOperator(new SetMatrix());
-    }
-
-
-    @Override
-    public void extractImages(File file) throws IOException {
-
-        try (PDDocument document = PDDocument.load(file)) {
-            init();
-            //noinspection ResultOfMethodCallIgnored
-            new File(rootLocation + "/extractedImages").mkdirs();
-            pageNum = 1;
-            for (PDPage page : document.getPages()) {
-                setPageNum(pageNum);
-                setPageHeight(page.getMediaBox().getHeight());
-                processPage(page);
-                pageNum++;
-
-            }
-            if (imagesFound) {
-                log.info("Extracted images from the file.");
-            } else {
-                log.info("No images were found within the file.");
-            }
-            imagesFound = false;
-        }
-
     }
 
     @Override
@@ -110,10 +114,10 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
             PDXObject xobject = getResources().getXObject(objectName);
             if (xobject instanceof PDImageXObject) {
                 int num = 0;
-                File imgFile = new File(rootLocation + "/extractedImages/" + objectName.getName() + "-0" + ".png");
+                File imgFile = new File(rootLocation + "/" + uuid + "/extractedImages/" + objectName.getName() + "-0" + ".png");
 
                 while (imgFile.exists()) {
-                    imgFile = new File(rootLocation + "/extractedImages/" + objectName.getName() + "-" + (num++) + ".png");
+                    imgFile = new File(rootLocation + "/" + uuid + "/extractedImages/" + objectName.getName() + "-" + (num++) + ".png");
                 }
                 ImageIO.write(((PDImageXObject) xobject).getImage(), "png", imgFile);
 
@@ -121,7 +125,6 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
                 float imageXScale = ctmNew.getScalingFactorX();
                 float imageYScale = ctmNew.getScalingFactorY();
 
-                imagesFound = true;
                 EmbeddedImageProperties embeddedImageProperties = new EmbeddedImageProperties(
                         ctmNew.getTranslateX(),
                         ctmNew.getTranslateY(),
@@ -131,7 +134,7 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
                         getPageHeight());
 
                 log.info("Starting OCR process on: " + imgFile.getName());
-                ocrService.doOcrOnEmbeddedImageFiles(imgFile, embeddedImageProperties);
+                ocrService.doOcrOnEmbeddedImageFiles(imgFile, embeddedImageProperties, uuid);
 
             } else if (xobject instanceof PDFormXObject) {
                 PDFormXObject form = (PDFormXObject) xobject;

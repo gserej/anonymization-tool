@@ -70,11 +70,10 @@ function disableEnablePrevNext() {
 
 disableEnablePrevNext();
 
-
 function fetchFiles() {
     $.ajax({
         type: "get",
-        url: '/api/files',
+        url: '/api/files/' + sessionStorage.getItem("app-UUID"),
         success: function (data) {
             if (data !== "") {
                 DEFAULT_URL = data;
@@ -83,6 +82,10 @@ function fetchFiles() {
             }
         }
     });
+}
+
+function updateFormUuid() {
+    $("#formUUID").val(sessionStorage.getItem("app-UUID"));
 }
 
 function fetchUUID() {
@@ -103,7 +106,7 @@ function fetchUUID() {
 function fetchMessage() {
     $.ajax({
         type: "get",
-        url: '/api/message',
+        url: '/api/message/' + sessionStorage.getItem("app-UUID"),
         success: function (data) {
             if (data !== "") {
                 message = data;
@@ -114,6 +117,7 @@ function fetchMessage() {
 }
 
 fetchUUID();
+updateFormUuid();
 fetchFiles();
 fetchMessage();
 
@@ -124,7 +128,7 @@ $("#do-refactor").on('click', function () {
         return e.marked === true
     });
     $.ajax({
-        url: "/api/rectangles",
+        url: "/api/rectangles/" + sessionStorage.getItem("app-UUID"),
         method: 'POST',
         data: JSON.stringify(filteredRects),
         contentType: 'application/json',
@@ -135,17 +139,10 @@ $("#do-refactor").on('click', function () {
 });
 
 $("#start-over").on('click', function () {
-
-    $.ajax({
-        url: "/api/startover",
-        method: 'GET',
-        contentType: 'application/json',
-        success: function () {
-            location.reload();
-            fetchMessage();
-            $("#message").html("");
-        }
-    })
+    sessionStorage.removeItem("app-UUID");
+    fetchUUID();
+    updateFormUuid();
+    location.reload();
 });
 
 $("#pdf-meta").hide();
@@ -228,7 +225,7 @@ function hasId(prop, value, data) {
 function getRectangles() {
     $.ajax({
         type: "get",
-        url: "/api/rectangles",
+        url: "/api/rectangles/" + sessionStorage.getItem("app-UUID"),
         contentType: 'application/json',
         success: function (data) {
             if (!$.trim(data)) {

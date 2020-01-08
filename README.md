@@ -17,6 +17,7 @@ Used technology stack:
 - Java
 - Spring Boot
 - Spring MVC
+- Redis
 - Maven
 - Tess4J
 - PDFBox
@@ -29,6 +30,8 @@ and more...
 Running the project locally
 ====================
 To run this application run the command: `mvn clean install spring-boot:run`
+
+Please use the master branch for testing purposes as an application on development branch may not work correctly.
 
 Then go to the http://localhost:8080/ page.
 

@@ -16,10 +16,10 @@ public class PhoneNumberValidationServiceImpl implements PhoneNumberValidationSe
     @Override
     public boolean isValidPolishPhoneNumber(String phoneNumber) {
         try {
-
             Phonenumber.PhoneNumber polishNumberProto = phoneUtil.parse(phoneNumber, "PL");
             return phoneUtil.isValidNumber(polishNumberProto);
         } catch (NumberParseException e) {
+            log.error("NumberParseException" + e);
             return false;
         }
     }

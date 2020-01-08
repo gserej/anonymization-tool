@@ -1,6 +1,7 @@
 package com.github.gserej.anonymizationtool.imageprocessing.impl;
 
-import com.github.gserej.anonymizationtool.filestorage.DocumentMetaInfo;
+import com.github.gserej.anonymizationtool.filestorage.Document;
+import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,25 +19,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
 public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionService {
 
     private final Path rootLocation;
-    private DocumentMetaInfo documentMetaInfo;
+    private DocumentRepository documentRepository;
 
 
     @Autowired
-    public ImageToPdfConversionServiceImpl(StorageProperties properties, DocumentMetaInfo documentMetaInfo) {
+    public ImageToPdfConversionServiceImpl(StorageProperties properties, DocumentRepository documentRepository) {
         rootLocation = Paths.get(properties.getLocation());
-        this.documentMetaInfo = documentMetaInfo;
+        this.documentRepository = documentRepository;
     }
 
     @Override
-    public File createPdfFromSingleImage(File imageFile, String fileName) throws IOException {
+    public File createPdfFromSingleImage(File imageFile, String fileName, UUID uuid) throws IOException {
 
-        if (!new File(rootLocation + "/tempPdfLocation").mkdirs())
+        if (!new File(rootLocation + "/" + uuid + "/tempPdfLocation").mkdirs())
             log.info("A new temporary folder hasn't been created.");
 
         try (PDDocument doc = new PDDocument()) {
@@ -49,33 +51,39 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
                 float widthRatio = page.getCropBox().getWidth() / width;
                 float heightRatio = page.getCropBox().getHeight() / height;
                 float ratio = Math.min(widthRatio, heightRatio);
-                documentMetaInfo.setImageRatio(ratio);
+
+                Document document = new Document(uuid);
+                document.setImageRatio(ratio);
+                documentRepository.save(document);
+
                 contents.drawImage(pdImage,
                         page.getCropBox().getWidth() - ratio * width,
                         page.getCropBox().getHeight() - ratio * height,
                         ratio * width,
                         ratio * height);
             }
-            String pdfPath = rootLocation + "/tempPdfLocation/" + FilenameUtils.removeExtension(fileName) + ".pdf";
+            String pdfPath = rootLocation + "/" + uuid + "/tempPdfLocation/" + FilenameUtils.removeExtension(fileName) + ".pdf";
             doc.save(pdfPath);
             return new File(pdfPath);
         }
     }
 
     @Override
-    public String createPdfFromMultipleImages(String fileName, File originalDocument) throws IOException {
+    public String createPdfFromMultipleImages(String fileName, File originalDocument, UUID uuid) throws IOException {
 
-        if (!new File(rootLocation + "/processedPdf").mkdirs())
+        if (!new File(rootLocation + "/" + uuid + "/processedPdf").mkdirs())
             log.info("A new temporary folder hasn't been created.");
 
         try (PDDocument doc = PDDocument.load(originalDocument)) {
 
-            List<String> imagesNames = documentMetaInfo.getImageList();
+            Document document = documentRepository.findById(uuid).orElseThrow();
+
+            List<String> imagesNames = document.getImageList();
             List<File> imageFiles = new ArrayList<>();
 
             for (String imageName : imagesNames) {
 
-                File file = new File(rootLocation + "/tempImages/" + imageName);
+                File file = new File(rootLocation + "/" + uuid + "/tempImages/" + imageName);
                 imageFiles.add(file);
             }
 
@@ -88,11 +96,10 @@ public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionServ
                 }
                 i++;
             }
-            String pdfPath = rootLocation + "/processedPdf/" + FilenameUtils.removeExtension(fileName) + ".pdf";
+            String pdfPath = rootLocation + "/" + uuid + "/processedPdf/" + FilenameUtils.removeExtension(fileName) + ".pdf";
             doc.save(pdfPath);
             return pdfPath;
         }
     }
-
 
 }

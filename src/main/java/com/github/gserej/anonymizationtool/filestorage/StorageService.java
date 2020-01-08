@@ -5,21 +5,24 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 public interface StorageService {
 
     void init();
 
-    void store(MultipartFile file);
+    void createUuidFolder(UUID uuid);
 
-    void storeAsFile(File file);
+    void store(MultipartFile file, UUID uuid);
 
-    Stream<Path> loadAll();
+    void storeAsFile(File file, UUID uuid);
 
-    Path load(String filename);
+    Stream<Path> loadAll(UUID uuid);
 
-    Resource loadAsResource(String filename);
+    Path load(String filename, UUID uuid);
+
+    Resource loadAsResource(String filename, UUID uuid);
 
     void deleteAll();
 

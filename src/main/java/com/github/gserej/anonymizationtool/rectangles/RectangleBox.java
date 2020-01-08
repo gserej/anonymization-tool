@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.rectangles.model;
+package com.github.gserej.anonymizationtool.rectangles;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,8 +14,8 @@ public class RectangleBox {
     private static final AtomicInteger count = new AtomicInteger(-1);
     private int id;
     private int page;
-    private boolean parsed;
     private boolean marked;
+    private boolean parsed;
     private boolean drew;
     private int typeOfData;
     private float x;
@@ -29,6 +29,7 @@ public class RectangleBox {
         this.id = count.incrementAndGet();
         this.marked = marked;
         this.parsed = parsed;
+        this.drew = drew;
         this.x = x;
         this.y = y;
         this.w = w;
@@ -36,6 +37,5 @@ public class RectangleBox {
         this.typeOfData = typeOfData;
         this.word = word;
         this.page = page;
-        this.drew = drew;
     }
 }
