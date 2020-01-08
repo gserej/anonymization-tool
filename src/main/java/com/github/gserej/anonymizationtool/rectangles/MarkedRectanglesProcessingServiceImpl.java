@@ -16,12 +16,10 @@ import java.util.UUID;
 @Service
 public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesProcessingService {
 
-
     private final StorageService storageService;
     private final DocumentRepository documentRepository;
     private ImageToPdfConversionService imageToPdfConversionService;
     private WordsDrawingService wordsDrawingService;
-
 
     public MarkedRectanglesProcessingServiceImpl(ImageToPdfConversionService imageToPdfConversionService,
                                                  WordsDrawingService wordsDrawingService, StorageService storageService, DocumentRepository documentRepository) {
@@ -31,13 +29,12 @@ public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesPr
         this.documentRepository = documentRepository;
     }
 
-
     @Override
     public void processReceivedRectangleSet(Set<RectangleBox> rectangleBoxesMarked, UUID uuid) {
 
         log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
         Document document = documentRepository.findById(uuid).orElseThrow();
-        document.setParsedRectangles(rectangleBoxesMarked);
+        document.setMarkedRectangles(rectangleBoxesMarked);
         documentRepository.save(document);
         File pdfFileToProcess = storageService.load(document.getDocumentName(), uuid).toFile();
         log.info("Loaded PDF file: " + pdfFileToProcess.getName());
@@ -46,7 +43,9 @@ public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesPr
             wordsDrawingService.drawBoxesAroundMarkedWords(pdfFileToProcess, uuid);
         } catch (IOException e) {
             log.error("Exception during drawing boxes around words" + e);
+            return;
         }
+        document = documentRepository.findById(uuid).orElseThrow();
         try {
             log.info("List of images: " + document.getImageList().toString());
             String pathToProcessedPdf = imageToPdfConversionService.createPdfFromMultipleImages(
@@ -56,7 +55,6 @@ public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesPr
             log.info("Document is ready to download.");
         } catch (IOException e) {
             log.error("Exception during creating PDF file from images.");
-
         }
     }
 }
