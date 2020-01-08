@@ -28,12 +28,12 @@ class CsvNameExtractionServiceImplTest {
     }
 
     @Test
-    void isCommonPolishLastNameLoweCase() {
+    void isCommonPolishLastNameLowerCaseNotFound() {
         assertFalse(csvNameExtractionService.isPolishFirstOrLastName("nowak"));
     }
 
     @Test
-    void isNoNamesFound() {
+    void isNoNamesNotFound() {
         assertFalse(csvNameExtractionService.isPolishFirstOrLastName("AAAAAAAAAAA"));
     }
 }
