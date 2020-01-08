@@ -32,6 +32,5 @@ class NumberTypeValidationServiceImplTest {
     void isValidREGON() {
         assertTrue(numberTypeValidationService.isValidREGON("375965280"));
         assertFalse(numberTypeValidationService.isValidREGON("375965281"));
-
     }
 }
