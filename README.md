@@ -29,9 +29,9 @@ and more...
 
 Running the project locally
 ====================
-To run this application run the command: `mvn clean install spring-boot:run`
+You need to have Redis running locally.
 
-Please use the master branch for testing purposes as an application on development branch may not work correctly.
+To run this application run the command: `mvn clean install spring-boot:run`
 
 Then go to the http://localhost:8080/ page.
 
