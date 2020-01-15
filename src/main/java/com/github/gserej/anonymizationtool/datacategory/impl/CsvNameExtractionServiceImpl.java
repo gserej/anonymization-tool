@@ -17,7 +17,7 @@ import java.util.Set;
 public class CsvNameExtractionServiceImpl implements CsvNameExtractionService {
 
     private static final String NAMES_CSV_FILE_PATH = "named_entities_dataset/names.csv";
-    private static Set<String> namesSet = new HashSet<>(260_000);
+    private static final Set<String> namesSet = new HashSet<>(260_000);
 
     private static void setUp() {
 

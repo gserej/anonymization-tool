@@ -11,7 +11,7 @@ import java.util.UUID;
 @RestController
 public class MessageController {
 
-    private DocumentRepository documentRepository;
+    private final DocumentRepository documentRepository;
 
     public MessageController(DocumentRepository documentRepository) {
         this.documentRepository = documentRepository;

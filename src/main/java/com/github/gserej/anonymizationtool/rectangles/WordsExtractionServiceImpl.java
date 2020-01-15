@@ -23,7 +23,7 @@ import java.util.*;
 @Service
 public class WordsExtractionServiceImpl implements WordsExtractionService {
 
-    private DocumentRepository documentRepository;
+    private final DocumentRepository documentRepository;
 
     public WordsExtractionServiceImpl(DocumentRepository documentRepository) {
         this.documentRepository = documentRepository;
@@ -59,8 +59,8 @@ public class WordsExtractionServiceImpl implements WordsExtractionService {
 }
 
 class PrintTextLocations extends PDFTextStripper {
-    private UUID uuid;
-    private DocumentRepository documentRepository;
+    private final UUID uuid;
+    private final DocumentRepository documentRepository;
 
     public PrintTextLocations(UUID uuid, DocumentRepository documentRepository) throws IOException {
         this.uuid = uuid;

@@ -52,7 +52,7 @@ import java.util.UUID;
 public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine implements ImageLocationsExtractionService {
     private static Path rootLocation;
 
-    private OCRService ocrService;
+    private final OCRService ocrService;
 
     @Autowired
     public ImageLocationsExtractionServiceImpl(StorageProperties properties, OCRService ocrService) {
@@ -82,14 +82,14 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
 @Slf4j
 class PdfImage extends PDFStreamEngine {
     private static Path rootLocation;
-    private OCRService ocrService;
+    private final OCRService ocrService;
     @Setter
     @Getter
     private int pageNum;
     @Setter
     @Getter
     private float pageHeight;
-    private UUID uuid;
+    private final UUID uuid;
 
     public PdfImage(Path rootLocation, OCRService ocrService, UUID uuid) {
         PdfImage.rootLocation = rootLocation;

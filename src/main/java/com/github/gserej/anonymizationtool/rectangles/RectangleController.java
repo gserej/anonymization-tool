@@ -13,9 +13,9 @@ import java.util.UUID;
 @RestController
 public class RectangleController {
 
-    private MarkedRectanglesProcessingService markedRectanglesProcessingService;
+    private final MarkedRectanglesProcessingService markedRectanglesProcessingService;
 
-    private DocumentRepository documentRepository;
+    private final DocumentRepository documentRepository;
 
     public RectangleController(MarkedRectanglesProcessingService markedRectanglesProcessingService,
                                DocumentRepository documentRepository) {

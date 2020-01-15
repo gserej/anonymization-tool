@@ -28,7 +28,7 @@ import java.util.UUID;
 @Service
 public class OCRServiceTesseractImpl implements OCRService {
 
-    private DocumentRepository documentRepository;
+    private final DocumentRepository documentRepository;
 
     private final int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
     @Value("${tessdata.path}")

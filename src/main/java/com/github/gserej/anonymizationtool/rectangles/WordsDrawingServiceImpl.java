@@ -46,7 +46,7 @@ import java.util.UUID;
 public class WordsDrawingServiceImpl implements WordsDrawingService {
 
     private static Path rootLocation;
-    private DocumentRepository documentRepository;
+    private final DocumentRepository documentRepository;
 
     @Autowired
     public WordsDrawingServiceImpl(StorageProperties properties, DocumentRepository documentRepository) {
@@ -73,8 +73,8 @@ public class WordsDrawingServiceImpl implements WordsDrawingService {
 class WordsDraw extends PDFTextStripper {
 
     private static final int SCALE = 8;
-    private Path rootLocation;
-    private DocumentRepository documentRepository;
+    private final Path rootLocation;
+    private final DocumentRepository documentRepository;
 
     public WordsDraw(Path rootLocation, DocumentRepository documentRepository) throws IOException {
         this.rootLocation = rootLocation;
@@ -104,9 +104,10 @@ class WordsDraw extends PDFTextStripper {
         String imageFilename = documentInfo.getDocumentName();
         int pt = imageFilename.lastIndexOf('.');
         imageFilename = imageFilename.substring(0, pt) + "-marked-" + (page + 1) + ".png";
-        if (!new File(rootLocation + "/" + uuid.toString() + "/tempImages/" + imageFilename).mkdirs())
+        File temporaryFile = new File(rootLocation + "/" + uuid.toString() + "/tempImages/" + imageFilename);
+        if (!temporaryFile.mkdirs())
             log.error("couldn't create /tempImages/ folder");
-        File file = new File(rootLocation + "/" + uuid.toString() + "/tempImages/" + imageFilename);
+        File file = temporaryFile;
         ImageIO.write(image, "png", file);
         List<String> imageList;
         if (documentInfo.getImageList() == null) {

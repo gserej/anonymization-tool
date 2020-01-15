@@ -26,7 +26,7 @@ import java.util.UUID;
 public class ImageToPdfConversionServiceImpl implements ImageToPdfConversionService {
 
     private final Path rootLocation;
-    private DocumentRepository documentRepository;
+    private final DocumentRepository documentRepository;
 
 
     @Autowired

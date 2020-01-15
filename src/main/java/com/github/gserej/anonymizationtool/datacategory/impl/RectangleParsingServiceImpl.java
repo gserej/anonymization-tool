@@ -15,9 +15,9 @@ import java.util.Set;
 @Service
 public class RectangleParsingServiceImpl implements RectangleParsingService {
 
-    private NumberTypeValidationService numberTypeValidationService;
-    private CsvNameExtractionService csvNameExtractionService;
-    private PhoneNumberValidationService phoneNumberValidationService;
+    private final NumberTypeValidationService numberTypeValidationService;
+    private final CsvNameExtractionService csvNameExtractionService;
+    private final PhoneNumberValidationService phoneNumberValidationService;
 
 
     public RectangleParsingServiceImpl(NumberTypeValidationService numberTypeValidationService,

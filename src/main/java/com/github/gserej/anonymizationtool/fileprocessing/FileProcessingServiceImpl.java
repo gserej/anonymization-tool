@@ -23,13 +23,13 @@ import java.util.UUID;
 @Slf4j
 public class FileProcessingServiceImpl implements FileProcessingService {
 
-    private StorageService storageService;
-    private DocumentRepository documentRepository;
-    private OCRService ocrService;
-    private ImageToPdfConversionService imageToPdfConversionService;
-    private RectangleParsingService rectangleParsingService;
-    private ImageLocationsExtractionService imageLocationsExtractionService;
-    private WordsExtractionService wordsExtractionService;
+    private final StorageService storageService;
+    private final DocumentRepository documentRepository;
+    private final OCRService ocrService;
+    private final ImageToPdfConversionService imageToPdfConversionService;
+    private final RectangleParsingService rectangleParsingService;
+    private final ImageLocationsExtractionService imageLocationsExtractionService;
+    private final WordsExtractionService wordsExtractionService;
 
 
     @Autowired

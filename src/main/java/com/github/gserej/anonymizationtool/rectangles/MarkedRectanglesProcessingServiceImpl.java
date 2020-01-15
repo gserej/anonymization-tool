@@ -18,8 +18,8 @@ public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesPr
 
     private final StorageService storageService;
     private final DocumentRepository documentRepository;
-    private ImageToPdfConversionService imageToPdfConversionService;
-    private WordsDrawingService wordsDrawingService;
+    private final ImageToPdfConversionService imageToPdfConversionService;
+    private final WordsDrawingService wordsDrawingService;
 
     public MarkedRectanglesProcessingServiceImpl(ImageToPdfConversionService imageToPdfConversionService,
                                                  WordsDrawingService wordsDrawingService, StorageService storageService, DocumentRepository documentRepository) {

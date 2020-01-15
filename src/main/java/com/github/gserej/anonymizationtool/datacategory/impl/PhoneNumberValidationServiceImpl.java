@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PhoneNumberValidationServiceImpl implements PhoneNumberValidationService {
 
-    private PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+    private final PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 
     @Override
     public boolean isValidPolishPhoneNumber(String phoneNumber) {
