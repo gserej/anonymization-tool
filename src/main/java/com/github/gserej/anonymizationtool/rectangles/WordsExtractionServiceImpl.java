@@ -1,7 +1,7 @@
 package com.github.gserej.anonymizationtool.rectangles;
 
-import com.github.gserej.anonymizationtool.filestorage.Document;
-import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
+import com.github.gserej.anonymizationtool.document.Document;
+import com.github.gserej.anonymizationtool.document.DocumentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -126,9 +126,7 @@ class PrintTextLocations extends PDFTextStripper {
         AffineTransform flipAT = new AffineTransform();
         s = flipAT.createTransformedShape(s);
 
-        return new RectangleBox(false,
-                false,
-                false,
+        return new RectangleBox(
                 (float) s.getBounds2D().getX(),
                 text.getPageHeight() - (float) s.getBounds2D().getY(),
                 (float) s.getBounds2D().getWidth(),

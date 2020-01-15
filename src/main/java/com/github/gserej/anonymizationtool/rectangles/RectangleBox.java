@@ -25,11 +25,11 @@ public class RectangleBox {
     private String word;
 
 
-    public RectangleBox(boolean marked, boolean drew, boolean parsed, float x, float y, float w, float h, int typeOfData, String word, int page) {
+    public RectangleBox(float x, float y, float w, float h, int typeOfData, String word, int page) {
         this.id = count.incrementAndGet();
-        this.marked = marked;
-        this.parsed = parsed;
-        this.drew = drew;
+        this.marked = false;
+        this.parsed = false;
+        this.drew = false;
         this.x = x;
         this.y = y;
         this.w = w;

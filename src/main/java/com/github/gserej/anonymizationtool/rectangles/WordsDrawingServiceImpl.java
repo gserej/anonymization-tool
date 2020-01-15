@@ -16,8 +16,8 @@
  */
 package com.github.gserej.anonymizationtool.rectangles;
 
-import com.github.gserej.anonymizationtool.filestorage.Document;
-import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
+import com.github.gserej.anonymizationtool.document.Document;
+import com.github.gserej.anonymizationtool.document.DocumentRepository;
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;

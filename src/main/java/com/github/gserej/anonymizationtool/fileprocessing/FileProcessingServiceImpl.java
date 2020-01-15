@@ -1,8 +1,8 @@
 package com.github.gserej.anonymizationtool.fileprocessing;
 
 import com.github.gserej.anonymizationtool.datacategory.RectangleParsingService;
-import com.github.gserej.anonymizationtool.filestorage.Document;
-import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
+import com.github.gserej.anonymizationtool.document.Document;
+import com.github.gserej.anonymizationtool.document.DocumentRepository;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageLocationsExtractionService;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;

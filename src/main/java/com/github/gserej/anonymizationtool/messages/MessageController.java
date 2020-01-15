@@ -1,7 +1,7 @@
 package com.github.gserej.anonymizationtool.messages;
 
-import com.github.gserej.anonymizationtool.filestorage.Document;
-import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
+import com.github.gserej.anonymizationtool.document.Document;
+import com.github.gserej.anonymizationtool.document.DocumentRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;

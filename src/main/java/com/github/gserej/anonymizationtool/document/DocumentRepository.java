@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.filestorage;
+package com.github.gserej.anonymizationtool.document;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;

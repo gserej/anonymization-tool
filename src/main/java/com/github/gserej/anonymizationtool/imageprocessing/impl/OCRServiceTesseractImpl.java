@@ -1,7 +1,7 @@
 package com.github.gserej.anonymizationtool.imageprocessing.impl;
 
-import com.github.gserej.anonymizationtool.filestorage.Document;
-import com.github.gserej.anonymizationtool.filestorage.DocumentRepository;
+import com.github.gserej.anonymizationtool.document.Document;
+import com.github.gserej.anonymizationtool.document.DocumentRepository;
 import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
 import com.github.gserej.anonymizationtool.imageprocessing.model.EmbeddedImageProperties;
 import com.github.gserej.anonymizationtool.rectangles.RectangleBox;
@@ -66,9 +66,7 @@ public class OCRServiceTesseractImpl implements OCRService {
                 Set<RectangleBox> rectanglesFromImage = new HashSet<>();
 
                 for (Word word : wordList) {
-                    RectangleBox rectangleBox = new RectangleBox(false,
-                            false,
-                            false,
+                    RectangleBox rectangleBox = new RectangleBox(
                             imageRatio * (float) word.getBoundingBox().getX(),
                             imageRatio * (float) word.getBoundingBox().getY(),
                             imageRatio * (float) word.getBoundingBox().getWidth(),
@@ -110,9 +108,7 @@ public class OCRServiceTesseractImpl implements OCRService {
                 }
 
                 for (Word word : wordList) {
-                    RectangleBox rectangleBox = new RectangleBox(false,
-                            false,
-                            false,
+                    RectangleBox rectangleBox = new RectangleBox(
                             positionX + (float) word.getBoundingBox().getX() * sizeX / bi.getWidth(),
                             -positionY + pageHeight - sizeY + (float) word.getBoundingBox().getY() * sizeY / bi.getHeight(),
                             (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),

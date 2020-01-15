@@ -25,12 +25,9 @@ class RectangleParsingServiceImplTest {
     @Test
     void shouldParseRectangleBoxSet() {
 
-        RectangleBox rectangleBox1 = new RectangleBox(false, false, false, 12, 10, 2, 3,
-                1, "Kowalski", 1);
-        RectangleBox rectangleBox2 = new RectangleBox(false, false, false, 256, 110, 7, 5,
-                1, "asdasasddsa", 2);
-        RectangleBox rectangleBox3 = new RectangleBox(false, false, false, 314, 157, 8, 60,
-                1, "554778962", 3);
+        RectangleBox rectangleBox1 = new RectangleBox(12, 10, 2, 3, 1, "Kowalski", 1);
+        RectangleBox rectangleBox2 = new RectangleBox(256, 110, 7, 5, 1, "asdasasddsa", 2);
+        RectangleBox rectangleBox3 = new RectangleBox(314, 157, 8, 60, 1, "554778962", 3);
         Set<RectangleBox> rectangleBoxSet = new HashSet<>();
         rectangleBoxSet.add(rectangleBox1);
         rectangleBoxSet.add(rectangleBox2);
