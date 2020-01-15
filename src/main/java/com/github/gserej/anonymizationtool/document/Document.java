@@ -1,4 +1,4 @@
-package com.github.gserej.anonymizationtool.filestorage;
+package com.github.gserej.anonymizationtool.document;
 
 import com.github.gserej.anonymizationtool.rectangles.RectangleBox;
 import lombok.AllArgsConstructor;
