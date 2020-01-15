@@ -23,54 +23,53 @@ if (!pdfjsLib.getDocument || !pdfjsViewer.PDFPageView) {
 pdfjsLib.GlobalWorkerOptions.workerSrc =
     'pdfjs-dist/build/pdf.worker.js';
 
-var CMAP_URL = 'pdfjs-dist/web/cmaps/';
-var CMAP_PACKED = true;
+const CMAP_URL = 'pdfjs-dist/web/cmaps/';
+const CMAP_PACKED = true;
+const SCALE = 1.0;
+const SCALE_FIXED = SCALE / 0.75;
 
-var PAGE_TO_VIEW = 1;
-var SCALE = 1.0;
-var SCALE_FIXED = SCALE / 0.75;
-var number_of_pages;
+let pageNumber = 1;
+let numberOfPages;
+let DEFAULT_URL;
+let message;
+let rectangles = [];
 
-var DEFAULT_URL;
-var message;
-var rects = [];
+const container = $('#pageContainer')[0];
+const prevPageButton = $("#pdf-prev");
+const nextPageButton = $("#pdf-next");
 
-var container = $('#pageContainer')[0];
-var pdf_prev = $("#pdf-prev");
-var pdf_next = $("#pdf-next");
-
-pdf_prev.on('click', function () {
-    if (PAGE_TO_VIEW !== 1) {
-        PAGE_TO_VIEW--;
+prevPageButton.on('click', function showPreviousPage() {
+    if (pageNumber !== 1) {
+        pageNumber--;
         render();
-        disableEnablePrevNext();
+        disableEnablePrevNextButtons();
     }
 });
 
-pdf_next.on('click', function () {
-    if (PAGE_TO_VIEW !== number_of_pages) {
-        PAGE_TO_VIEW++;
+nextPageButton.on('click', function showNextPage() {
+    if (pageNumber !== numberOfPages) {
+        pageNumber++;
         render();
-        disableEnablePrevNext();
+        disableEnablePrevNextButtons();
     }
 });
 
-function disableEnablePrevNext() {
-    if (PAGE_TO_VIEW === 1) {
-        pdf_prev.prop("disabled", true);
+function disableEnablePrevNextButtons() {
+    if (pageNumber === 1) {
+        prevPageButton.prop("disabled", true);
     } else {
-        pdf_prev.prop("disabled", false);
+        prevPageButton.prop("disabled", false);
     }
-    if (PAGE_TO_VIEW === number_of_pages) {
-        pdf_next.prop("disabled", true);
+    if (pageNumber === numberOfPages) {
+        nextPageButton.prop("disabled", true);
     } else {
-        pdf_next.prop("disabled", false);
+        nextPageButton.prop("disabled", false);
     }
 }
 
-disableEnablePrevNext();
+disableEnablePrevNextButtons();
 
-function fetchFiles() {
+function getPdfFileUrl() {
     $.ajax({
         type: "get",
         url: '/api/files/' + sessionStorage.getItem("app-UUID"),
@@ -84,11 +83,11 @@ function fetchFiles() {
     });
 }
 
-function updateFormUuid() {
+function updateUuidForm() {
     $("#formUUID").val(sessionStorage.getItem("app-UUID"));
 }
 
-function fetchUUID() {
+function getUUID() {
     $.ajax({
         type: "get",
         url: '/api/uuid',
@@ -103,7 +102,7 @@ function fetchUUID() {
     });
 }
 
-function fetchMessage() {
+function getMessage() {
     $.ajax({
         type: "get",
         url: '/api/message/' + sessionStorage.getItem("app-UUID"),
@@ -116,15 +115,15 @@ function fetchMessage() {
     });
 }
 
-fetchUUID();
-updateFormUuid();
-fetchFiles();
-fetchMessage();
+getUUID();
+updateUuidForm();
+getPdfFileUrl();
+getMessage();
 
-$("#do-refactor").on('click', function () {
+$("#do-refactor").on('click', function doAnonymization() {
 
     $("#do-refactor").prop("disabled", true);
-    var filteredRects = rects.filter(function (e) {
+    let filteredRects = rectangles.filter(function (e) {
         return e.marked === true
     });
     $.ajax({
@@ -133,15 +132,15 @@ $("#do-refactor").on('click', function () {
         data: JSON.stringify(filteredRects),
         contentType: 'application/json',
         success: function () {
-            fetchMessage();
+            getMessage();
         }
     })
 });
 
-$("#start-over").on('click', function () {
+$("#start-over").on('click', function startOver() {
     sessionStorage.removeItem("app-UUID");
-    fetchUUID();
-    updateFormUuid();
+    getUUID();
+    updateUuidForm();
     location.reload();
 });
 
@@ -157,24 +156,34 @@ $(document).ready(
                 }
             }
         );
-    });
+    }
+);
 
+const startAjaxGet = (function () {
+    let executed = false;
+    return function () {
+        if (!executed) {
+            executed = true;
+            getRectangles();
+        }
+    };
+})();
 
 function render() {
-    var loadingTask = pdfjsLib.getDocument({
+    const loadingTask = pdfjsLib.getDocument({
         url: DEFAULT_URL,
         cMapUrl: CMAP_URL,
         cMapPacked: CMAP_PACKED
     });
     $(".page").remove();
     loadingTask.promise.then(function (pdfDocument) {
-        number_of_pages = pdfDocument.numPages;
-        document.getElementById('page_count').textContent = number_of_pages;
-        document.getElementById('page_num').textContent = PAGE_TO_VIEW;
-        return pdfDocument.getPage(PAGE_TO_VIEW).then(function (pdfPage) {
-            var pdfPageView = new pdfjsViewer.PDFPageView({
+        numberOfPages = pdfDocument.numPages;
+        document.getElementById('page_count').textContent = numberOfPages;
+        document.getElementById('page_num').textContent = pageNumber;
+        return pdfDocument.getPage(pageNumber).then(function (pdfPage) {
+            const pdfPageView = new pdfjsViewer.PDFPageView({
                 container: container,
-                id: PAGE_TO_VIEW,
+                id: pageNumber,
                 scale: SCALE,
                 defaultViewport: pdfPage.getViewport({scale: SCALE}),
                 // annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
@@ -186,15 +195,15 @@ function render() {
             $("#pdf-meta").show();
             $("#data-types").show();
             $("#files-list").show();
-            if (PAGE_TO_VIEW === number_of_pages) {
-                pdf_next.prop("disabled", true);
+            if (pageNumber === numberOfPages) {
+                nextPageButton.prop("disabled", true);
             } else {
-                pdf_next.prop("disabled", false);
+                nextPageButton.prop("disabled", false);
             }
 
-            for (var i in rects) {
-                if (rects.hasOwnProperty(i)) {
-                    rects[i].drew = false;
+            for (let i in rectangles) {
+                if (rectangles.hasOwnProperty(i)) {
+                    rectangles[i].drew = false;
                 }
             }
 
@@ -205,16 +214,6 @@ function render() {
     });
 }
 
-
-var startAjaxGet = (function () {
-    var executed = false;
-    return function () {
-        if (!executed) {
-            executed = true;
-            getRectangles();
-        }
-    };
-})();
 
 function hasId(prop, value, data) {
     return data.some(function (obj) {
@@ -234,16 +233,16 @@ function getRectangles() {
                     getRectangles();
                 }, 1000)
             } else {
-                var additionalRectListJS = JSON.stringify(data);
-                for (var o in data) {
+                for (const o in data) {
                     if (data.hasOwnProperty(o)) {
-                        if (!hasId('id', data[o].id, rects)) {
+                        if (!hasId('id', data[o].id, rectangles)) {
 
-                            rects.push(data[o]);
+                            rectangles.push(data[o]);
                             // console.log("Object pushed: " + JSON.stringify(data[o]));
                         }
                     }
                 }
+                // var additionalRectListJS = JSON.stringify(data);
                 // console.log("Received following rectangle list: " + additionalRectListJS);
             }
         },
@@ -267,7 +266,7 @@ function drawRedRec(x, y, w, h, rectNum) {
     ctx.beginPath();
     ctx.rect(SCALE_FIXED * x, SCALE_FIXED * y, SCALE_FIXED * w, SCALE_FIXED * h);
     ctx.stroke();
-    rects[rectNum].drew = true;
+    rectangles[rectNum].drew = true;
     // console.log("Red rectangle has been drawn: " + rectNum);
 }
 
@@ -293,11 +292,12 @@ function removeRec(rectNum) {
 }
 
 function drawAllBlack() {
-    for (var i = 0, len = rects.length; i < len; i++) {
-        if (rects[i].page === PAGE_TO_VIEW) {
-            if (rects[i].marked === true) {
-                if (rects[i].drew === false) {
-                    drawBlackRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+    let i = 0, len = rectangles.length;
+    for (; i < len; i++) {
+        if (rectangles[i].page === pageNumber) {
+            if (rectangles[i].marked === true) {
+                if (rectangles[i].drew === false) {
+                    drawBlackRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                 }
             }
         }
@@ -305,47 +305,48 @@ function drawAllBlack() {
 }
 
 function drawAllRed() {
-    for (var i = 0, len = rects.length; i < len; i++) {
-        if (rects[i].page === PAGE_TO_VIEW) {
-            if (rects[i].marked === false) {
-                if (rects[i].drew === false) {
+    let i = 0, len = rectangles.length;
+    for (; i < len; i++) {
+        if (rectangles[i].page === pageNumber) {
+            if (rectangles[i].marked === false) {
+                if (rectangles[i].drew === false) {
                     if ($("input[value='PESEL']").is(":checked")) {
-                        if (rects[i].typeOfData === 2) {
-                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        if (rectangles[i].typeOfData === 2) {
+                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                         }
                     }
                     if ($("input[value='NIP']").is(":checked")) {
-                        if (rects[i].typeOfData === 3) {
-                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        if (rectangles[i].typeOfData === 3) {
+                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                         }
                     }
                     if ($("input[value='REGON']").is(":checked")) {
-                        if (rects[i].typeOfData === 4) {
-                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        if (rectangles[i].typeOfData === 4) {
+                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                         }
                     }
                     if ($("input[value='Name']").is(":checked")) {
-                        if (rects[i].typeOfData === 5) {
-                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        if (rectangles[i].typeOfData === 5) {
+                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                         }
                     }
                     if ($("input[value='Phone_Number']").is(":checked")) {
-                        if (rects[i].typeOfData === 6) {
-                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        if (rectangles[i].typeOfData === 6) {
+                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                         }
                     }
                     if ($("input[value='Address']").is(":checked")) {
-                        if (rects[i].typeOfData === 7) {
-                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        if (rectangles[i].typeOfData === 7) {
+                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                         }
                     }
                     if ($("input[value='date']").is(":checked")) {
-                        if (rects[i].typeOfData === 8) {
-                            drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                        if (rectangles[i].typeOfData === 8) {
+                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                         }
                     }
-                    if (rects[i].typeOfData === 1) {
-                        drawRedRec(rects[i].x, rects[i].y, rects[i].w, rects[i].h, i);
+                    if (rectangles[i].typeOfData === 1) {
+                        drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
                     }
 
                 }
@@ -356,12 +357,12 @@ function drawAllRed() {
 
 $("#draw").on('click', function drawRects() {
 
-    var c_page = $("canvas[id^=page]");
-    var rectNum = -1;
+    let c_page = $("canvas[id^=page]");
+    let rectNum = -1;
 
     drawAllBlack();
     drawAllRed();
-    var BB, BBoffsetX, BBoffsetY;
+    let BB, BBoffsetX, BBoffsetY;
 
     function setBB() {
         BB = c_page.get(0).getBoundingClientRect();
@@ -372,11 +373,12 @@ $("#draw").on('click', function drawRects() {
     setBB();
 
     function collides(rects, x, y) {
-        var isCollision = false;
+        let isCollision = false;
         rectNum = -1;
-        for (var i = 0, len = rects.length; i < len; i++) {
-            var left = rects[i].x * SCALE_FIXED, right = rects[i].x * SCALE_FIXED + rects[i].w * SCALE_FIXED;
-            var top = rects[i].y * SCALE_FIXED, bottom = rects[i].y * SCALE_FIXED + rects[i].h * SCALE_FIXED;
+        let i = 0, len = rects.length;
+        for (; i < len; i++) {
+            let left = rects[i].x * SCALE_FIXED, right = rects[i].x * SCALE_FIXED + rects[i].w * SCALE_FIXED;
+            let top = rects[i].y * SCALE_FIXED, bottom = rects[i].y * SCALE_FIXED + rects[i].h * SCALE_FIXED;
             if (right >= x
                 && left <= x
                 && bottom >= y
@@ -390,17 +392,17 @@ $("#draw").on('click', function drawRects() {
 
     $('.textLayer').click(function (e) {
         $('.textLayer').hide();
-        if (collides(rects, e.pageX - BBoffsetX, e.pageY - BBoffsetY)) {
+        if (collides(rectangles, e.pageX - BBoffsetX, e.pageY - BBoffsetY)) {
             // console.log("RecNum " + rectNum);
             if (rectNum !== -1) {
-                if (rects[rectNum].marked === false) {
-                    rects[rectNum].marked = true;
+                if (rectangles[rectNum].marked === false) {
+                    rectangles[rectNum].marked = true;
                     removeRec(rectNum);
-                    drawBlackRec(rects[rectNum].x, rects[rectNum].y, rects[rectNum].w, rects[rectNum].h, rectNum);
-                } else if (rects[rectNum].marked === true) {
-                    rects[rectNum].marked = false;
+                    drawBlackRec(rectangles[rectNum].x, rectangles[rectNum].y, rectangles[rectNum].w, rectangles[rectNum].h, rectNum);
+                } else if (rectangles[rectNum].marked === true) {
+                    rectangles[rectNum].marked = false;
                     removeRec(rectNum);
-                    drawRedRec(rects[rectNum].x, rects[rectNum].y, rects[rectNum].w, rects[rectNum].h, rectNum);
+                    drawRedRec(rectangles[rectNum].x, rectangles[rectNum].y, rectangles[rectNum].w, rectangles[rectNum].h, rectNum);
                 }
             }
         }
