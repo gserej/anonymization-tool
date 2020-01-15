@@ -16,14 +16,14 @@ import java.util.UUID;
 
 @Slf4j
 @Controller
-public class FileUploadController {
+public class FileProcessingController {
 
     private final StorageService storageService;
     private final FileProcessingService fileProcessingService;
 
 
     @Autowired
-    public FileUploadController(StorageService storageService, FileProcessingService fileProcessingService) {
+    public FileProcessingController(StorageService storageService, FileProcessingService fileProcessingService) {
         this.storageService = storageService;
         this.fileProcessingService = fileProcessingService;
     }
@@ -38,7 +38,7 @@ public class FileUploadController {
     public String getFileLocation(@PathVariable("uuid") UUID uuid) {
         storageService.createUuidFolder(uuid);
         return storageService.loadAll(uuid).map(
-                path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
+                path -> MvcUriComponentsBuilder.fromMethodName(FileProcessingController.class,
                         "serveFile", uuid, path.getFileName().toString())
                         .build().toString())
                 .filter(f -> f.endsWith(".pdf"))

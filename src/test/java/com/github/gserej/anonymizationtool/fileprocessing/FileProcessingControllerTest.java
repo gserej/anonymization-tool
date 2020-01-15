@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @SpringBootTest
-class FileUploadControllerTest {
+class FileProcessingControllerTest {
 
 
     @MockBean
