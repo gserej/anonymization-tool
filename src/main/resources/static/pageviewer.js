@@ -31,7 +31,6 @@ const SCALE_FIXED = SCALE / 0.75;
 let pageNumber = 1;
 let numberOfPages;
 let DEFAULT_URL;
-let message;
 let rectangles = [];
 
 const container = $('#pageContainer')[0];
@@ -69,6 +68,10 @@ function disableEnablePrevNextButtons() {
 
 disableEnablePrevNextButtons();
 
+function updateUuidForm() {
+    $("#formUUID").val(sessionStorage.getItem("app-UUID"));
+}
+
 function getPdfFileUrl() {
     $.ajax({
         type: "get",
@@ -81,10 +84,6 @@ function getPdfFileUrl() {
             }
         }
     });
-}
-
-function updateUuidForm() {
-    $("#formUUID").val(sessionStorage.getItem("app-UUID"));
 }
 
 function getUUID() {
@@ -108,8 +107,7 @@ function getMessage() {
         url: '/api/message/' + sessionStorage.getItem("app-UUID"),
         success: function (data) {
             if (data !== "") {
-                message = data;
-                $("#message").html(message);
+                $("#message").html(data);
             }
         }
     });
@@ -214,7 +212,6 @@ function render() {
     });
 }
 
-
 function hasId(prop, value, data) {
     return data.some(function (obj) {
         return prop in obj && obj[prop] === value;
@@ -255,13 +252,12 @@ function getRectangles() {
     });
 }
 
+$("#getMoreBoxes").on('click', function () {
+    getRectangles();
+});
 
 function drawRedRec(x, y, w, h, rectNum) {
-    var $cloned = $("#pageContainer > div > div.canvasWrapper > canvas[id^=page]:last").first().clone();
-    $cloned.clone().prop('id', 'rect' + rectNum).prop('style', 'position: absolute')
-        .removeAttr("moz-opaque").prependTo("#pageContainer > div > div.canvasWrapper");
-    var c = $("canvas[id^=rect]");
-    var ctx = c.get(0).getContext("2d");
+    const ctx = getContext(rectNum);
     ctx.strokeStyle = 'rgba(255,0,0,1)';
     ctx.beginPath();
     ctx.rect(SCALE_FIXED * x, SCALE_FIXED * y, SCALE_FIXED * w, SCALE_FIXED * h);
@@ -271,11 +267,7 @@ function drawRedRec(x, y, w, h, rectNum) {
 }
 
 function drawBlackRec(x, y, w, h, rectNum) {
-    var $cloned = $("#pageContainer > div > div.canvasWrapper > canvas[id^=page]:last").first().clone();
-    $cloned.clone().prop('id', 'rect' + rectNum).prop('style', 'position: absolute')
-        .removeAttr("moz-opaque").prependTo("#pageContainer > div > div.canvasWrapper");
-    var c = $("canvas[id^=rect]");
-    var ctx = c.get(0).getContext("2d");
+    const ctx = getContext(rectNum);
     ctx.strokeStyle = 'rgba(0,0,0,1)';
     ctx.beginPath();
     ctx.rect(SCALE_FIXED * x, SCALE_FIXED * y, SCALE_FIXED * w, SCALE_FIXED * h);
@@ -283,74 +275,61 @@ function drawBlackRec(x, y, w, h, rectNum) {
     ctx.fill();
 }
 
-$("#getMoreBoxes").on('click', function () {
-    getRectangles();
-});
+function getContext(rectNum) {
+    const $cloned = $("#pageContainer > div > div.canvasWrapper > canvas[id^=page]:last").first().clone();
+    $cloned.clone().prop('id', 'rect' + rectNum).prop('style', 'position: absolute')
+        .removeAttr("moz-opaque").prependTo("#pageContainer > div > div.canvasWrapper");
+    const c = $("canvas[id^=rect]");
+    return c.get(0).getContext("2d");
+}
 
-function removeRec(rectNum) {
+function removeRectangle(rectNum) {
     $("#pageContainer > div > div.canvasWrapper > canvas[id=rect" + rectNum + "]:first").remove();
 }
 
 function drawAllBlack() {
     let i = 0, len = rectangles.length;
     for (; i < len; i++) {
-        if (rectangles[i].page === pageNumber) {
-            if (rectangles[i].marked === true) {
-                if (rectangles[i].drew === false) {
-                    drawBlackRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                }
-            }
+        if (rectangles[i].page === pageNumber && rectangles[i].marked === true && rectangles[i].drew === false) {
+            drawBlackRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
         }
     }
 }
 
 function drawAllRed() {
     let i = 0, len = rectangles.length;
-    for (; i < len; i++) {
-        if (rectangles[i].page === pageNumber) {
-            if (rectangles[i].marked === false) {
-                if (rectangles[i].drew === false) {
-                    if ($("input[value='PESEL']").is(":checked")) {
-                        if (rectangles[i].typeOfData === 2) {
-                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                        }
-                    }
-                    if ($("input[value='NIP']").is(":checked")) {
-                        if (rectangles[i].typeOfData === 3) {
-                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                        }
-                    }
-                    if ($("input[value='REGON']").is(":checked")) {
-                        if (rectangles[i].typeOfData === 4) {
-                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                        }
-                    }
-                    if ($("input[value='Name']").is(":checked")) {
-                        if (rectangles[i].typeOfData === 5) {
-                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                        }
-                    }
-                    if ($("input[value='Phone_Number']").is(":checked")) {
-                        if (rectangles[i].typeOfData === 6) {
-                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                        }
-                    }
-                    if ($("input[value='Address']").is(":checked")) {
-                        if (rectangles[i].typeOfData === 7) {
-                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                        }
-                    }
-                    if ($("input[value='date']").is(":checked")) {
-                        if (rectangles[i].typeOfData === 8) {
-                            drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                        }
-                    }
-                    if (rectangles[i].typeOfData === 1) {
-                        drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
-                    }
 
-                }
+    function drawRed() {
+        drawRedRec(rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h, i);
+    }
+
+    for (; i < len; i++) {
+        if (rectangles[i].page === pageNumber && rectangles[i].marked === false && rectangles[i].drew === false) {
+            if ($("input[value='PESEL']").is(":checked") && rectangles[i].typeOfData === 2) {
+                drawRed();
             }
+            if ($("input[value='NIP']").is(":checked") && rectangles[i].typeOfData === 3) {
+                drawRed();
+            }
+            if ($("input[value='REGON']").is(":checked") && rectangles[i].typeOfData === 4) {
+                drawRed();
+            }
+            if ($("input[value='Name']").is(":checked") && rectangles[i].typeOfData === 5) {
+                drawRed();
+            }
+            if ($("input[value='Phone_Number']").is(":checked") && rectangles[i].typeOfData === 6) {
+                drawRed();
+            }
+            if ($("input[value='Address']").is(":checked") && rectangles[i].typeOfData === 7) {
+                drawRed();
+            }
+            if ($("input[value='date']").is(":checked") && rectangles[i].typeOfData === 8) {
+                drawRed();
+            }
+            if (rectangles[i].typeOfData === 1) {
+                drawRed();
+            }
+
         }
     }
 }
@@ -362,17 +341,12 @@ $("#draw").on('click', function drawRects() {
 
     drawAllBlack();
     drawAllRed();
-    let BB, BBoffsetX, BBoffsetY;
 
-    function setBB() {
-        BB = c_page.get(0).getBoundingClientRect();
-        BBoffsetX = BB.left;
-        BBoffsetY = BB.top;
-    }
+    let BB = c_page.get(0).getBoundingClientRect();
+    let BBoffsetX = BB.left;
+    let BBoffsetY = BB.top;
 
-    setBB();
-
-    function collides(rects, x, y) {
+    function doCollide(rects, x, y) {
         let isCollision = false;
         rectNum = -1;
         let i = 0, len = rects.length;
@@ -392,16 +366,16 @@ $("#draw").on('click', function drawRects() {
 
     $('.textLayer').click(function (e) {
         $('.textLayer').hide();
-        if (collides(rectangles, e.pageX - BBoffsetX, e.pageY - BBoffsetY)) {
+        if (doCollide(rectangles, e.pageX - BBoffsetX, e.pageY - BBoffsetY)) {
             // console.log("RecNum " + rectNum);
             if (rectNum !== -1) {
                 if (rectangles[rectNum].marked === false) {
                     rectangles[rectNum].marked = true;
-                    removeRec(rectNum);
+                    removeRectangle(rectNum);
                     drawBlackRec(rectangles[rectNum].x, rectangles[rectNum].y, rectangles[rectNum].w, rectangles[rectNum].h, rectNum);
                 } else if (rectangles[rectNum].marked === true) {
                     rectangles[rectNum].marked = false;
-                    removeRec(rectNum);
+                    removeRectangle(rectNum);
                     drawRedRec(rectangles[rectNum].x, rectangles[rectNum].y, rectangles[rectNum].w, rectangles[rectNum].h, rectNum);
                 }
             }
