@@ -15,7 +15,6 @@ public class RectangleBox {
     private int id;
     private int page;
     private boolean marked;
-    private boolean parsed;
     private boolean drew;
     private int typeOfData;
     private float x;
@@ -28,7 +27,6 @@ public class RectangleBox {
     public RectangleBox(float x, float y, float w, float h, int typeOfData, String word, int page) {
         this.id = count.incrementAndGet();
         this.marked = false;
-        this.parsed = false;
         this.drew = false;
         this.x = x;
         this.y = y;
