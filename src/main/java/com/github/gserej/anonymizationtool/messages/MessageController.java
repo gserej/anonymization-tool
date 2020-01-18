@@ -1,6 +1,6 @@
 package com.github.gserej.anonymizationtool.messages;
 
-import com.github.gserej.anonymizationtool.document.Document;
+import com.github.gserej.anonymizationtool.document.DocumentNotFoundException;
 import com.github.gserej.anonymizationtool.document.DocumentRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,11 +18,7 @@ public class MessageController {
     }
 
     @GetMapping("/api/message/{uuid}")
-    public String getMessage(@PathVariable("uuid") UUID uuid) {
-        if (documentRepository.findById(uuid).isPresent()) {
-            Document document = documentRepository.findById(uuid).get();
-            return document.getCurrentMessage();
-        }
-        return "";
+    public String getMessage(@PathVariable("uuid") UUID uuid) throws DocumentNotFoundException {
+        return documentRepository.findById(uuid).orElseThrow(DocumentNotFoundException::new).getCurrentMessage();
     }
 }
