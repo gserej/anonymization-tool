@@ -22,7 +22,7 @@ public class WordsExtractionServiceImpl implements WordsExtractionService {
     }
 
     @Override
-    public void getWordsLocations(File file, UUID uuid) throws IOException {
+    public void getWordsLocations(File file, UUID uuid) throws WordsExtractionException {
         try (PDDocument document = PDDocument.load(file)) {
             if (!document.isEncrypted()) {
                 PDFTextStripper stripper = new WordsExtractionTextStripper(uuid, documentRepository);
@@ -31,8 +31,8 @@ public class WordsExtractionServiceImpl implements WordsExtractionService {
                     stripPage(page, stripper, document);
                 }
             }
-        } catch (NullPointerException e) {
-            log.error("Null pointer exception loading PDF file " + e);
+        } catch (IOException e) {
+            throw new WordsExtractionException();
         }
     }
 

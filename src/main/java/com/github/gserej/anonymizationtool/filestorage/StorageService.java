@@ -14,15 +14,15 @@ public interface StorageService {
 
     void createUuidFolder(UUID uuid);
 
-    void store(MultipartFile file, UUID uuid);
+    void store(MultipartFile file, UUID uuid) throws StorageCannotSaveFileException;
 
-    void storeAsFile(File file, UUID uuid);
+    void storeAsFile(File file, UUID uuid) throws StorageCannotSaveFileException;
 
     Stream<Path> loadAll(UUID uuid);
 
     Path load(String filename, UUID uuid);
 
-    Resource loadAsResource(String filename, UUID uuid);
+    Resource loadAsResource(String filename, UUID uuid) throws StorageFileNotFoundException;
 
     void deleteAll();
 

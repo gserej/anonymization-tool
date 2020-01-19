@@ -1,14 +1,16 @@
 package com.github.gserej.anonymizationtool.rectangles;
 
 import com.github.gserej.anonymizationtool.document.Document;
+import com.github.gserej.anonymizationtool.document.DocumentNotFoundException;
 import com.github.gserej.anonymizationtool.document.DocumentRepository;
+import com.github.gserej.anonymizationtool.filestorage.StorageCannotSaveFileException;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
+import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionException;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,31 +32,23 @@ public class MarkedRectanglesProcessingServiceImpl implements MarkedRectanglesPr
     }
 
     @Override
-    public void processReceivedRectangleSet(Set<RectangleBox> rectangleBoxesMarked, UUID uuid) {
+    public void processReceivedRectangleSet(Set<RectangleBox> rectangleBoxesMarked, UUID uuid)
+            throws DocumentNotFoundException, StorageCannotSaveFileException, WordsDrawingException, ImageToPdfConversionException {
 
-        log.info("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
-        Document document = documentRepository.findById(uuid).orElseThrow();
+        log.debug("Marked rectangles received from the page: " + rectangleBoxesMarked.toString());
+        Document document = documentRepository.findById(uuid).orElseThrow(DocumentNotFoundException::new);
         document.setMarkedRectangles(rectangleBoxesMarked);
         documentRepository.save(document);
         File pdfFileToProcess = storageService.load(document.getDocumentName(), uuid).toFile();
-        log.info("Loaded PDF file: " + pdfFileToProcess.getName());
+        log.debug("Loaded PDF file: " + pdfFileToProcess.getName());
+        wordsDrawingService.drawBoxesAroundMarkedWords(pdfFileToProcess, uuid);
+        document = documentRepository.findById(uuid).orElseThrow(DocumentNotFoundException::new);
 
-        try {
-            wordsDrawingService.drawBoxesAroundMarkedWords(pdfFileToProcess, uuid);
-        } catch (IOException e) {
-            log.error("Exception during drawing boxes around words" + e);
-            return;
-        }
-        document = documentRepository.findById(uuid).orElseThrow();
-        try {
-            log.info("List of images: " + document.getImageList().toString());
-            String pathToProcessedPdf = imageToPdfConversionService.createPdfFromMultipleImages(
-                    document.getDocumentName(), pdfFileToProcess, uuid);
+        log.debug("List of images: " + document.getImageList().toString());
+        String pathToProcessedPdf = imageToPdfConversionService.createPdfFromMultipleImages(
+                document.getDocumentName(), pdfFileToProcess, uuid);
 
-            storageService.storeAsFile(new File(pathToProcessedPdf), uuid);
-            log.info("Document is ready to download.");
-        } catch (IOException e) {
-            log.error("Exception during creating PDF file from images.");
-        }
+        storageService.storeAsFile(new File(pathToProcessedPdf), uuid);
+        log.debug("Document is ready to download.");
     }
 }

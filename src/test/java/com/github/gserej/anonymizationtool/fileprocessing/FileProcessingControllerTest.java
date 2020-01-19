@@ -33,10 +33,11 @@ class FileProcessingControllerTest {
 
     @Test
     void should404WhenMissingFile() throws Exception {
-        given(this.storageService.loadAsResource("test.pdf", UUID.randomUUID()))
+        UUID randomUuid = UUID.randomUUID();
+        given(this.storageService.loadAsResource("test.pdf", randomUuid))
                 .willThrow(StorageFileNotFoundException.class);
 
-        this.mvc.perform(get("/files/test.pdf")).andExpect(status().isNotFound());
+        this.mvc.perform(get("api/files/" + randomUuid + "/test.pdf")).andExpect(status().isNotFound());
     }
 
 //    @Test

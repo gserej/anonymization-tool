@@ -31,40 +31,41 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void store(MultipartFile file, UUID uuid) {
-        if (file.getOriginalFilename() != null) {
-            String filename = StringUtils.cleanPath(file.getOriginalFilename());
-            try {
-                if (file.isEmpty()) {
-                    throw new StorageException("Failed to store empty file " + filename);
-                }
-                if (filename.contains("..")) {
-                    throw new StorageException(
-                            "Cannot store file with relative path outside current directory "
-                                    + filename);
-                }
-                try (InputStream inputStream = file.getInputStream()) {
+    public void store(MultipartFile file, UUID uuid) throws StorageCannotSaveFileException {
+        String filename = file.getOriginalFilename();
 
-                    createUuidFolder(uuid);
-//                    Files.createDirectories(Paths.get(rootLocation + "/" + uuid.toString()));
-                    Files.copy(inputStream, this.rootLocation.resolve(uuid + "/" + filename),
-                            StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (IOException e) {
-                throw new StorageException("Failed to store file " + filename, e);
-            }
+        if (filename != null) {
+            filename = StringUtils.cleanPath(filename);
+        } else {
+            throw new StorageCannotSaveFileException("Cannot get filename from file!");
+        }
+
+        if (file.isEmpty()) {
+            throw new StorageCannotSaveFileException("Failed to store empty file " + filename);
+        }
+        if (filename.contains("..")) {
+            throw new StorageCannotSaveFileException(
+                    "Cannot store file with relative path outside current directory "
+                            + filename);
+        }
+        try (InputStream inputStream = file.getInputStream()) {
+            createUuidFolder(uuid);
+            Files.copy(inputStream, this.rootLocation.resolve(uuid + "/" + filename),
+                    StandardCopyOption.REPLACE_EXISTING);
+
+        } catch (IOException e) {
+            throw new StorageCannotSaveFileException("Failed to store file " + filename, e);
         }
     }
 
-
     @Override
-    public void storeAsFile(File file, UUID uuid) {
+    public void storeAsFile(File file, UUID uuid) throws StorageCannotSaveFileException {
         String filename = file.getName();
         try {
             Files.copy(new FileInputStream(file), this.rootLocation.resolve(uuid + "/" + filename),
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new StorageException("Failed to store file " + filename, e);
+            throw new StorageCannotSaveFileException("Failed to store file " + filename, e);
         }
     }
 
@@ -86,7 +87,7 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public Resource loadAsResource(String filename, UUID uuid) {
+    public Resource loadAsResource(String filename, UUID uuid) throws StorageFileNotFoundException {
         try {
             Path file = load(filename, uuid);
             Resource resource = new UrlResource(file.toUri());

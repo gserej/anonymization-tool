@@ -27,15 +27,15 @@ public class WordsDrawingServiceImpl implements WordsDrawingService {
     }
 
     @Override
-    public void drawBoxesAroundMarkedWords(File file, UUID uuid) throws IOException {
+    public void drawBoxesAroundMarkedWords(File file, UUID uuid) throws WordsDrawingException {
         try (PDDocument pdDocument = PDDocument.load(file)) {
             WordsDrawingTextStripper wordsDrawingTextStripper = new WordsDrawingTextStripper(rootLocation, documentRepository);
             wordsDrawingTextStripper.setSortByPosition(true);
             for (int page = 0; page < pdDocument.getNumberOfPages(); ++page) {
                 wordsDrawingTextStripper.stripPage(page, pdDocument, uuid);
             }
-        } catch (NullPointerException e) {
-            log.error("Null pointer exception loading PDF file " + e);
+        } catch (IOException e) {
+            throw new WordsDrawingException();
         }
     }
 }

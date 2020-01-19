@@ -17,6 +17,7 @@
 package com.github.gserej.anonymizationtool.imageprocessing.impl;
 
 import com.github.gserej.anonymizationtool.filestorage.StorageProperties;
+import com.github.gserej.anonymizationtool.imageprocessing.ImageExtractionException;
 import com.github.gserej.anonymizationtool.imageprocessing.ImageLocationsExtractionService;
 import com.github.gserej.anonymizationtool.imageprocessing.OCRService;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,7 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
     }
 
     @Override
-    public void extractImages(File file, UUID uuid) throws IOException {
+    public void extractImages(File file, UUID uuid) throws ImageExtractionException {
 
         try (PDDocument document = PDDocument.load(file)) {
             ImageLocationsExtractionStreamEngine imageLocationsExtractionStreamEngine = new ImageLocationsExtractionStreamEngine(rootLocation, ocrService, uuid);
@@ -60,6 +61,8 @@ public class ImageLocationsExtractionServiceImpl extends PDFStreamEngine impleme
                 imageLocationsExtractionStreamEngine.processPage(page);
                 pageNum++;
             }
+        } catch (IOException e) {
+            throw new ImageExtractionException();
         }
     }
 }

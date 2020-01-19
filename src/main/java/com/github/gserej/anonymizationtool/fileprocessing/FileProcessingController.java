@@ -1,7 +1,10 @@
 package com.github.gserej.anonymizationtool.fileprocessing;
 
+import com.github.gserej.anonymizationtool.filestorage.StorageCannotSaveFileException;
 import com.github.gserej.anonymizationtool.filestorage.StorageFileNotFoundException;
 import com.github.gserej.anonymizationtool.filestorage.StorageService;
+import com.github.gserej.anonymizationtool.imageprocessing.ImageToPdfConversionException;
+import com.github.gserej.anonymizationtool.rectangles.WordsExtractionException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 
+import java.io.FileNotFoundException;
 import java.util.UUID;
 
 @Slf4j
@@ -21,47 +25,38 @@ public class FileProcessingController {
     private final StorageService storageService;
     private final FileProcessingService fileProcessingService;
 
-
     @Autowired
     public FileProcessingController(StorageService storageService, FileProcessingService fileProcessingService) {
         this.storageService = storageService;
         this.fileProcessingService = fileProcessingService;
     }
 
-    @GetMapping("/")
-    public String getMainPage() {
-        return "pageviewer.html";
+    @PostMapping("/api/files")
+    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile, @RequestParam UUID uuid)
+            throws FileProcessingWrongExtensionException, StorageCannotSaveFileException, ImageToPdfConversionException, WordsExtractionException {
+        fileProcessingService.processUploadedFile(multipartFile, uuid);
+        return "redirect:/";
     }
 
     @ResponseBody
     @GetMapping("/api/files/{uuid}")
-    public String getFileLocation(@PathVariable("uuid") UUID uuid) {
+    public String getFileLocation(@PathVariable("uuid") UUID uuid) throws FileNotFoundException {
         storageService.createUuidFolder(uuid);
         return storageService.loadAll(uuid).map(
                 path -> MvcUriComponentsBuilder.fromMethodName(FileProcessingController.class,
                         "serveFile", uuid, path.getFileName().toString())
                         .build().toString())
                 .filter(f -> f.endsWith(".pdf"))
-                .findFirst().orElse(null);
+                .findFirst().orElseThrow(FileNotFoundException::new);
     }
 
     @ResponseBody
-    @GetMapping("api/files/{uuid}/{filename:.+}")
-    public ResponseEntity<Resource> serveFile(@PathVariable("uuid") UUID uuid, @PathVariable("filename") String filename) {
-
+    @GetMapping("api/files/{uuid}/{filename}")
+    public ResponseEntity<Resource> serveFile(@PathVariable("uuid") UUID uuid, @PathVariable("filename") String filename)
+            throws StorageFileNotFoundException {
         Resource file = storageService.loadAsResource(filename, uuid);
-
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
-    }
-
-    @PostMapping("/api/files")
-    public String handleFileUpload(@RequestParam("file") MultipartFile multipartFile, @RequestParam UUID uuid) {
-        storageService.store(multipartFile, uuid);
-
-        fileProcessingService.processUploadedFile(multipartFile.getOriginalFilename(), uuid);
-
-        return "redirect:/";
     }
 
     @ExceptionHandler(StorageFileNotFoundException.class)
