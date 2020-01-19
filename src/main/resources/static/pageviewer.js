@@ -37,22 +37,6 @@ const container = $('#pageContainer')[0];
 const prevPageButton = $("#pdf-prev");
 const nextPageButton = $("#pdf-next");
 
-prevPageButton.on('click', function showPreviousPage() {
-    if (pageNumber !== 1) {
-        pageNumber--;
-        render();
-        disableEnablePrevNextButtons();
-    }
-});
-
-nextPageButton.on('click', function showNextPage() {
-    if (pageNumber !== numberOfPages) {
-        pageNumber++;
-        render();
-        disableEnablePrevNextButtons();
-    }
-});
-
 function disableEnablePrevNextButtons() {
     if (pageNumber === 1) {
         prevPageButton.prop("disabled", true);
@@ -65,6 +49,22 @@ function disableEnablePrevNextButtons() {
         nextPageButton.prop("disabled", false);
     }
 }
+
+prevPageButton.on('click', () => {
+    if (pageNumber !== 1) {
+        pageNumber--;
+        render();
+        disableEnablePrevNextButtons();
+    }
+});
+
+nextPageButton.on('click', () => {
+    if (pageNumber !== numberOfPages) {
+        pageNumber++;
+        render();
+        disableEnablePrevNextButtons();
+    }
+});
 
 disableEnablePrevNextButtons();
 
@@ -118,11 +118,10 @@ updateUuidForm();
 getPdfFileUrl();
 getMessage();
 
-$("#do-refactor").on('click', function doAnonymization() {
-
+$("#do-refactor").on('click', () => {
     $("#do-refactor").prop("disabled", true);
-    let filteredRects = rectangles.filter(function (e) {
-        return e.marked === true
+    let filteredRects = rectangles.filter(function (rectangle) {
+        return rectangle.marked === true
     });
     $.ajax({
         url: "/api/rectangles/" + sessionStorage.getItem("app-UUID"),
@@ -157,7 +156,7 @@ $(document).ready(
     }
 );
 
-const startAjaxGet = (function () {
+const startAjaxGet = (() => {
     let executed = false;
     return function () {
         if (!executed) {
@@ -252,7 +251,7 @@ function getRectangles() {
     });
 }
 
-$("#getMoreBoxes").on('click', function () {
+$("#getMoreBoxes").on('click', () => {
     getRectangles();
 });
 
