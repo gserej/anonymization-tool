@@ -20,12 +20,10 @@ public class CsvNameValidationService {
 
     private static void setUp() {
 
-        try {
+        ClassLoader classLoader = CsvNameValidationService.class.getClassLoader();
+        File csvFile = new File(Objects.requireNonNull(classLoader.getResource(NAMES_CSV_FILE_PATH)).getFile());
 
-            ClassLoader classLoader = CsvNameValidationService.class.getClassLoader();
-            File csvFile = new File(Objects.requireNonNull(classLoader.getResource(NAMES_CSV_FILE_PATH)).getFile());
-
-            CSVReader csvReader = new CSVReader(new FileReader(csvFile));
+        try (CSVReader csvReader = new CSVReader(new FileReader(csvFile))) {
             String[] line;
             while ((line = csvReader.readNext()) != null) {
                 if (line[1].equals("P-N") || line[1].equals("P-L")) {

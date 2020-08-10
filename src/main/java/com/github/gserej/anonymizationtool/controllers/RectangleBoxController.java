@@ -40,7 +40,6 @@ public class RectangleBoxController {
 
     @GetMapping("/api/rectangles/{uuid}")
     public Set<RectangleBox> getRectangles(@PathVariable("uuid") UUID uuid) throws DocumentNotFoundException {
-        Document document = documentRepository.findById(uuid).orElseThrow(DocumentNotFoundException::new);
-        return document.getParsedRectangles();
+        return documentRepository.findById(uuid).orElseThrow(DocumentNotFoundException::new).getParsedRectangles();
     }
 }
