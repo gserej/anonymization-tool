@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "File was not found")
-public class StorageFileNotFoundException extends Exception {
+public class StorageFileNotFoundException extends RuntimeException {
 
     StorageFileNotFoundException(String message) {
         super(message);
