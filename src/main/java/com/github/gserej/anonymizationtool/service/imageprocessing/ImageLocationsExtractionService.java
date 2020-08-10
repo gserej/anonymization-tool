@@ -40,6 +40,7 @@ public class ImageLocationsExtractionService extends PDFStreamEngine {
 
     @Autowired
     public ImageLocationsExtractionService(StorageProperties properties, OCRService ocrService) {
+
         rootLocation = Paths.get(properties.getLocation());
         this.ocrService = ocrService;
     }

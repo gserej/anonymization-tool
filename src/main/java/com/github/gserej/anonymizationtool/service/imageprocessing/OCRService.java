@@ -29,7 +29,6 @@ public class OCRService {
 
     private final DocumentRepository documentRepository;
 
-    private final int level = ITessAPI.TessPageIteratorLevel.RIL_WORD;
     @Value("${tessdata.path}")
     String tessdataPathString;
 
@@ -58,7 +57,7 @@ public class OCRService {
             try {
                 BufferedImage bi = ImageIO.read(imageFile);
 
-                List<Word> wordList = instance.getWords(bi, level);
+                List<Word> wordList = instance.getWords(bi, ITessAPI.TessPageIteratorLevel.RIL_WORD);
 
                 Document document = documentRepository.findById(uuid).orElseThrow();
                 Set<RectangleBox> rectanglesFromImage = new HashSet<>();
@@ -95,7 +94,7 @@ public class OCRService {
         if (instance != null) {
             try {
                 BufferedImage bi = ImageIO.read(imageFile);
-                List<Word> wordList = instance.getWords(bi, level);
+                List<Word> wordList = instance.getWords(bi, ITessAPI.TessPageIteratorLevel.RIL_WORD);
                 Document document = documentRepository.findById(uuid).orElseThrow();
                 Set<RectangleBox> rectanglesFromImage;
                 if (document.getOriginalRectangles() != null) {
@@ -110,7 +109,7 @@ public class OCRService {
                             -positionY + pageHeight - sizeY + (float) word.getBoundingBox().getY() * sizeY / bi.getHeight(),
                             (float) word.getBoundingBox().getWidth() * sizeX / bi.getWidth(),
                             (float) word.getBoundingBox().getHeight() * sizeY / bi.getHeight(),
-                            1, word.getText(), Math.round(pageNum));
+                            1, word.getText(), pageNum);
                     rectanglesFromImage.add(rectangleBox);
                 }
                 document.setOriginalRectangles(rectanglesFromImage);
